@@ -24,8 +24,8 @@ func AuthMiddleware() echo.MiddlewareFunc {
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			
 			// Check if token is blacklisted
-			var blacklist models.TokenBlacklist
-			if err := config.DB.Where("token = ?", tokenString).First(&blacklist).Error; err == nil {
+			var count int64
+			if err := config.DB.Model(&models.TokenBlacklist{}).Where("token = ?", tokenString).Count(&count).Error; err == nil && count > 0 {
 				return utils.SendError(c, http.StatusUnauthorized, "Token has been revoked", map[string]interface{}{})
 			}
 
