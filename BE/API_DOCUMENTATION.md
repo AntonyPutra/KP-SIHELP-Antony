@@ -1,416 +1,453 @@
 # SIHELP API Documentation
 
-## Base URL
-* **Local**: `http://localhost:8000`
-* **Tailscale**: `http://100.73.16.92:8000`
-* **Domain**: `https://api.whaleestudio.my.id`
+## 1. Overview
+SIHELP adalah sistem helpdesk dan ticketing layanan berbasis web. API ini dirancang untuk melayani aplikasi SIHELP secara seragam melalui arsitektur POST-Only, dimana seluruh *request* (termasuk list data, detail, penciptaan, pengubahan, dan penghapusan) menggunakan method POST dan *JSON payload*.
 
-## Authentication
-API ini menggunakan Bearer Token untuk endpoint yang diproteksi.
-Header yang digunakan:
-```
-Authorization: Bearer <token>
+## 2. Base URL
+API ini dapat diakses pada *environment* berikut:
+- **Local:** `http://localhost:8000`
+- **Tailscale:** `http://100.73.16.92:8000`
+- **Domain:** `https://api.whaleestudio.my.id`
+
+Pada Postman Collection yang disediakan, gunakan *variable* `{{base_url}}`.
+
+## 3. Authentication
+Sebagian besar *endpoint* dalam aplikasi ini dilindungi dan mewajibkan pengguna untuk melakukan autentikasi. Autentikasi dilakukan menggunakan **Bearer Token** (berbasis JWT).
+
+Cara mendapatkan token:
+1. Kirim *request* `POST /api/auth/login` menggunakan email dan *password*.
+2. Jika berhasil, server akan merespon dengan mengembalikan *token*.
+3. Simpan token ini dan sertakan di bagian *Header* setiap *request* yang membutuhkan autentikasi dengan format: `Authorization: Bearer <token>`.
+
+## 4. Standard Headers
+Sertakan *header* berikut untuk setiap *request* (kecuali *endpoint* otentikasi login yang tidak membutuhkan *Authorization*):
+```http
 Content-Type: application/json
+Authorization: Bearer {{token}}
 ```
 
-## Standard Response
-Semua response dibungkus menggunakan format JSON standar:
+## 5. Standard Response Format
+Semua respon JSON mematuhi struktur standar aplikasi.
 
-**Success Response:**
+**Success Response Example:**
 ```json
 {
   "success": true,
-  "message": "Pesan sukses",
-  "data": { ... }
+  "message": "Success",
+  "data": {}
 }
 ```
 
-**Error Response:**
+**Error Response Example:**
 ```json
 {
   "success": false,
-  "message": "Pesan error",
-  "errors": { ... }
+  "message": "Error",
+  "errors": {}
 }
 ```
 
-> **Catatan Penting**: 
-> Demi keseragaman request dan mempermudah testing di Postman, **semua endpoint aplikasi menggunakan method POST**. ID maupun filter parameter dikirimkan di dalam JSON Body Request, bukan di URL param atau Query String.
+## 6. Role Access
+Sistem menerapkan kendali akses berbasis *Role-Based Access Control* (RBAC) dengan tingkatan:
+
+| Role ID | Role | Deskripsi Akses |
+| :--- | :--- | :--- |
+| `1` | **Admin** | Akses penuh (*Full access*). Dapat mengelola pengguna, kategori, serta tiket. |
+| `2` | **Petugas** | Dapat mengelola tiket yang ditugaskan, membalas komentar, dan merubah status. |
+| `3` | **User** | Akses terbatas. Hanya dapat membuat tiket dan melihat tiket miliknya sendiri. |
+| `4` | **Pimpinan** | Akses terbatas hanya untuk melihat *Dashboard* dan *Reports* (Read-Only). |
+
+## 7. Endpoint Documentation
+
+### Auth API
+
+#### POST `/api/auth/login`
+- **Auth Required:** No
+- **Role Access:** Public
+- **Request Body:**
+  ```json
+  {
+    "email": "admin@sihelp.local",
+    "password": "admin123"
+  }
+  ```
+- **Success Response:**
+  ```json
+  {
+    "success": true,
+    "message": "Login successful",
+    "data": {
+      "token": "eyJhbG..."
+    }
+  }
+  ```
+
+#### POST `/api/auth/profile`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:** `{}`
+- **Success Response:**
+  ```json
+  {
+    "success": true,
+    "message": "Profile retrieved successfully",
+    "data": {
+      "id": 1,
+      "name": "Super Administrator"
+    }
+  }
+  ```
+
+#### POST `/api/auth/logout`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:** `{}`
 
 ---
 
-## 1. Auth API
+### User API
 
-### Login
-`POST /api/auth/login`
-**Request Body:**
-```json
-{
-  "email": "admin@sihelp.local",
-  "password": "admin123"
-}
-```
+#### POST `/api/users/list`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:**
+  ```json
+  {
+    "search": "",
+    "role_id": null
+  }
+  ```
 
-### Profile
-`POST /api/auth/profile`
-**Request Body:** `{}`
+#### POST `/api/users/create`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:**
+  ```json
+  {
+    "name": "Demo User",
+    "email": "demo.user@sihelp.local",
+    "password": "password123",
+    "role_id": 3
+  }
+  ```
 
-### Logout
-`POST /api/auth/logout`
-**Request Body:** `{}`
+#### POST `/api/users/detail`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:** `{"id": 1}`
 
----
+#### POST `/api/users/update`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:**
+  ```json
+  {
+    "id": 1,
+    "name": "Super Administrator",
+    "email": "admin@sihelp.local",
+    "role_id": 1
+  }
+  ```
 
-## 2. User API (Admin Only)
-
-### List Users
-`POST /api/users/list`
-**Request Body:**
-```json
-{
-  "search": "",
-  "role_id": null
-}
-```
-
-### Create User
-`POST /api/users/create`
-**Request Body:**
-```json
-{
-  "name": "Budi Santoso",
-  "email": "budi@sihelp.local",
-  "password": "password123",
-  "role_id": 2
-}
-```
-
-### Detail User
-`POST /api/users/detail`
-**Request Body:**
-```json
-{
-  "id": 1
-}
-```
-
-### Update User
-`POST /api/users/update`
-**Request Body:**
-```json
-{
-  "id": 1,
-  "name": "Super Administrator",
-  "email": "admin@sihelp.local",
-  "role_id": 1
-}
-```
-
-### Delete User
-`POST /api/users/delete`
-**Request Body:**
-```json
-{
-  "id": 2
-}
-```
+#### POST `/api/users/delete`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:** `{"id": 6}`
 
 ---
 
-## 3. Category API
+### Category API
 
-### List Categories
-`POST /api/categories/list`
-**Request Body:**
-```json
-{
-  "search": ""
-}
-```
+#### POST `/api/categories/list`
+- **Auth Required:** Yes
+- **Role Access:** All Roles (Users for reporting tickets)
+- **Request Body:** `{"search": ""}`
 
-### Create Category (Admin Only)
-`POST /api/categories/create`
-**Request Body:**
-```json
-{
-  "name": "Jaringan"
-}
-```
+#### POST `/api/categories/create`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:** `{"name": "Testing Category"}`
 
-### Detail Category
-`POST /api/categories/detail`
-**Request Body:**
-```json
-{
-  "id": 1
-}
-```
+#### POST `/api/categories/detail`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Petugas
+- **Request Body:** `{"id": 1}`
 
-### Update Category (Admin Only)
-`POST /api/categories/update`
-**Request Body:**
-```json
-{
-  "id": 1,
-  "name": "Jaringan"
-}
-```
+#### POST `/api/categories/update`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:** `{"id": 1, "name": "Jaringan"}`
 
-### Delete Category (Admin Only)
-`POST /api/categories/delete`
-**Request Body:**
-```json
-{
-  "id": 1
-}
-```
+#### POST `/api/categories/delete`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:** `{"id": 7}`
 
 ---
 
-## 4. Ticket API
+### Ticket API
 
-### List Tickets
-`POST /api/tickets/list`
-**Request Body:**
-```json
-{
-  "search": "",
-  "status": "",
-  "priority": "",
-  "category_id": null,
-  "assigned_to": null,
-  "reporter_id": null
-}
-```
+#### POST `/api/tickets/list`
+- **Auth Required:** Yes
+- **Role Access:** All Roles (Filtered based on Role)
+- **Request Body:**
+  ```json
+  {
+    "search": "",
+    "status": "",
+    "priority": "",
+    "category_id": null,
+    "assigned_to": null,
+    "reporter_id": null
+  }
+  ```
 
-### Create Ticket
-`POST /api/tickets/create`
-**Request Body:**
-```json
-{
-  "title": "Internet kantor tidak stabil",
-  "description": "Koneksi internet sering terputus sejak pagi.",
-  "category_id": 1,
-  "priority": "High"
-}
-```
+#### POST `/api/tickets/create`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:**
+  ```json
+  {
+    "title": "Internet kantor tidak stabil",
+    "description": "Koneksi internet sering terputus sejak pagi.",
+    "category_id": 1,
+    "priority": "High"
+  }
+  ```
 
-### Detail Ticket
-`POST /api/tickets/detail`
-**Request Body:**
-```json
-{
-  "id": 1
-}
-```
+#### POST `/api/tickets/detail`
+- **Auth Required:** Yes
+- **Role Access:** All Roles (If owned or Admin/Petugas)
+- **Request Body:** `{"id": 1}`
 
-### Update Ticket (Admin Only)
-`POST /api/tickets/update`
-**Request Body:**
-```json
-{
-  "id": 1,
-  "title": "Internet kantor tidak stabil",
-  "description": "Koneksi internet sering terputus sejak pagi.",
-  "category_id": 1,
-  "priority": "High"
-}
-```
+#### POST `/api/tickets/update`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Petugas, Owner
+- **Request Body:**
+  ```json
+  {
+    "id": 1,
+    "title": "Internet kantor tidak stabil",
+    "description": "Koneksi internet sering terputus sejak pagi.",
+    "category_id": 1,
+    "priority": "High"
+  }
+  ```
 
-### Update Ticket Status (Admin & Petugas)
-`POST /api/tickets/update-status`
-**Request Body:**
-```json
-{
-  "id": 1,
-  "status": "Diproses"
-}
-```
+#### POST `/api/tickets/update-status`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Petugas
+- **Request Body:**
+  ```json
+  {
+    "id": 1,
+    "status": "Diproses"
+  }
+  ```
 
-### Assign Ticket (Admin Only)
-`POST /api/tickets/assign`
-**Request Body:**
-```json
-{
-  "ticket_id": 1,
-  "user_id": 2
-}
-```
+#### POST `/api/tickets/assign`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:**
+  ```json
+  {
+    "ticket_id": 1,
+    "user_id": 2
+  }
+  ```
 
-### Delete Ticket (Admin Only)
-`POST /api/tickets/delete`
-**Request Body:**
-```json
-{
-  "id": 1
-}
-```
+#### POST `/api/tickets/delete`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:** `{"id": 12}`
 
 ---
 
-## 5. Comment API
+### Comment API
 
-### List Comments
-`POST /api/comments/list`
-**Request Body:**
-```json
-{
-  "ticket_id": 1
-}
-```
+#### POST `/api/comments/list`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:** `{"ticket_id": 1}`
 
-### Create Comment
-`POST /api/comments/create`
-**Request Body:**
-```json
-{
-  "ticket_id": 1,
-  "comment": "Laporan sudah diterima dan sedang diperiksa."
-}
-```
+#### POST `/api/comments/create`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:**
+  ```json
+  {
+    "ticket_id": 1,
+    "comment": "Laporan sudah diterima dan sedang diperiksa."
+  }
+  ```
 
 ---
 
-## 6. Dashboard API (Admin & Pimpinan)
+### Dashboard API
 
-### Summary
-`POST /api/dashboard/summary`
-**Request Body:** `{}`
+#### POST `/api/dashboard/summary`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Pimpinan, Petugas
+- **Request Body:** `{}`
 
-### Tickets by Status
-`POST /api/dashboard/tickets-by-status`
-**Request Body:** `{}`
+#### POST `/api/dashboard/tickets-by-status`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Pimpinan, Petugas
+- **Request Body:** `{}`
 
-### Tickets by Category
-`POST /api/dashboard/tickets-by-category`
-**Request Body:** `{}`
+#### POST `/api/dashboard/tickets-by-category`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Pimpinan, Petugas
+- **Request Body:** `{}`
 
-### Tickets by Priority
-`POST /api/dashboard/tickets-by-priority`
-**Request Body:** `{}`
+#### POST `/api/dashboard/tickets-by-priority`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Pimpinan, Petugas
+- **Request Body:** `{}`
 
-### Tickets Monthly
-`POST /api/dashboard/tickets-monthly`
-**Request Body:** `{}`
-
----
-
-## 7. Report API (Admin & Pimpinan)
-
-### Filter Tickets
-`POST /api/reports/tickets`
-**Request Body:**
-```json
-{
-  "start_date": "",
-  "end_date": "",
-  "status": "",
-  "category_id": null,
-  "priority": "",
-  "assigned_to": null,
-  "reporter_id": null
-}
-```
-
-### Report Summary
-`POST /api/reports/tickets/summary`
-**Request Body:**
-```json
-{
-  "start_date": "",
-  "end_date": ""
-}
-```
+#### POST `/api/dashboard/tickets-monthly`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Pimpinan, Petugas
+- **Request Body:** `{}`
 
 ---
 
-## 8. Audit Log API (Admin & Pimpinan)
+### Report API
 
-### List Audit Logs
-`POST /api/audit-logs/list`
-**Request Body:**
-```json
-{
-  "search": "",
-  "user_id": null,
-  "table_name": "",
-  "start_date": "",
-  "end_date": ""
-}
-```
+#### POST `/api/reports/tickets`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Pimpinan
+- **Request Body:**
+  ```json
+  {
+    "start_date": "",
+    "end_date": "",
+    "status": "",
+    "category_id": null,
+    "priority": "",
+    "assigned_to": null,
+    "reporter_id": null
+  }
+  ```
 
-### Detail Audit Log
-`POST /api/audit-logs/detail`
-**Request Body:**
-```json
-{
-  "id": 1
-}
-```
-
----
-
-## 9. Role Access Matrix
-
-| Role | Deskripsi Hak Akses |
-|------|--------------------|
-| **Admin** | Memiliki akses penuh (CRUD) ke seluruh data sistem, termasuk pengguna, kategori, audit logs, mengubah status, serta menugaskan tiket (Assign Ticket). |
-| **Petugas** | Hanya bisa melihat daftar tiket yang ditugaskan kepada dirinya dan mengubah status tiket menjadi Diproses/Selesai/Ditolak. |
-| **User** | Hanya bisa melihat, membuat, dan membalas komentar tiket miliknya sendiri. |
-| **Pimpinan** | Memiliki hak baca (Read-Only) untuk laporan dashboard, report ticket, serta audit logs tanpa bisa melakukan perubahan. |
+#### POST `/api/reports/tickets/summary`
+- **Auth Required:** Yes
+- **Role Access:** Admin, Pimpinan
+- **Request Body:**
+  ```json
+  {
+    "start_date": "",
+    "end_date": ""
+  }
+  ```
 
 ---
 
-## 10. Example cURL
+### Audit Log API
 
-### 1. Login
+#### POST `/api/audit-logs/list`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:**
+  ```json
+  {
+    "search": "",
+    "user_id": null,
+    "table_name": "",
+    "start_date": "",
+    "end_date": ""
+  }
+  ```
+
+#### POST `/api/audit-logs/detail`
+- **Auth Required:** Yes
+- **Role Access:** Admin
+- **Request Body:** `{"id": 1}`
+
+---
+
+## 8. Example Curl
+
+**Login:**
 ```bash
 curl -X POST http://localhost:8000/api/auth/login \
--H "Content-Type: application/json" \
--d '{"email":"admin@sihelp.local","password":"admin123"}'
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@sihelp.local","password":"admin123"}'
 ```
 
-### 2. List Users
+**Get Profile:**
+```bash
+curl -X POST http://localhost:8000/api/auth/profile \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{}'
+```
+
+**List Users:**
 ```bash
 curl -X POST http://localhost:8000/api/users/list \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <TOKEN>" \
--d '{}'
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{"search":""}'
 ```
 
-### 3. Create Ticket
+**Create Ticket:**
 ```bash
 curl -X POST http://localhost:8000/api/tickets/create \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <TOKEN>" \
--d '{
-  "title": "Internet Mati",
-  "description": "Wifi ruang meeting tidak terkoneksi",
-  "category_id": 1,
-  "priority": "High"
-}'
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{"title":"Login error","description":"Can not access my account","category_id":1,"priority":"Medium"}'
 ```
 
-### 4. Assign Ticket
-```bash
-curl -X POST http://localhost:8000/api/tickets/assign \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <TOKEN>" \
--d '{"ticket_id": 1, "user_id": 2}'
-```
-
-### 5. Update Status Ticket
+**Update Ticket Status:**
 ```bash
 curl -X POST http://localhost:8000/api/tickets/update-status \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <TOKEN>" \
--d '{"id": 1, "status": "Diproses"}'
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{"id":1,"status":"Diproses"}'
 ```
 
-### 6. List Audit Logs
+**Assign Ticket:**
+```bash
+curl -X POST http://localhost:8000/api/tickets/assign \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{"ticket_id":1,"user_id":2}'
+```
+
+**Dashboard Summary:**
+```bash
+curl -X POST http://localhost:8000/api/dashboard/summary \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{}'
+```
+
+**List Audit Logs:**
 ```bash
 curl -X POST http://localhost:8000/api/audit-logs/list \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <TOKEN>" \
--d '{}'
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_HERE>" \
+  -d '{"search":""}'
 ```
+
+## 9. Postman Usage Guide
+
+Untuk menguji API melalui Postman, ikuti langkah berikut:
+
+1. Buka aplikasi Postman.
+2. Klik tombol **Import**.
+3. Pilih dan *import* file `SIHELP.postman_collection.json` (Collection) dan `SIHELP.postman_environment.json` (Environment).
+4. Pastikan untuk mengaktifkan/pilih *environment* **SIHELP Environment** dari *dropdown environment* di pojok kanan atas Postman.
+5. Eksekusi *request* pertama yaitu **Login** (berada di dalam folder *Auth*).
+6. Script pada Postman akan secara otomatis menyimpan token ke *environment variable* `{{token}}`.
+7. Setelah itu, seluruh endpoint lain dapat dieksekusi tanpa perlu memberikan otorisasi manual.
+
+## 10. Security Notes
+
+Fitur keamanan SIHELP:
+- **Password Hashing:** Semua password di-enkripsi di *database* menggunakan mekanisme **bcrypt**.
+- **JSON Web Token (JWT):** Autentikasi sepenuhnya dilakukan berbasis JWT dengan masa aktif (*expiry*) tertentu.
+- **Logger Masking:** Data sensitif (*password*, *token*, dsb) disamarkan/ditutupi saat dicatat pada server logger.
+- **Audit Logs:** Jejak manipulasi data ditandai (*signed*) menggunakan **SHA256**.
+- Semua integrasi aplikasi berbasis layanan *Bearer Token* dan memvalidasi tipe Hak Akses (Role-Based).
