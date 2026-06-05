@@ -42,7 +42,6 @@ func CustomLogger() echo.MiddlewareFunc {
 			start := time.Now()
 
 			req := c.Request()
-			reqID := fmt.Sprintf("REQ-%s-%04d", time.Now().Format("20060102-150405"), time.Now().Nanosecond()%10000)
 
 			// Read request body
 			var reqBody []byte
@@ -66,13 +65,9 @@ func CustomLogger() echo.MiddlewareFunc {
 			duration := time.Since(start).Milliseconds()
 			status := c.Response().Status
 
-			userID := "-"
-			if uid := c.Get("user_id"); uid != nil {
-				userID = fmt.Sprintf("%v", uid)
-			}
-			roleID := "-"
-			if rid := c.Get("role_id"); rid != nil {
-				roleID = fmt.Sprintf("%v", rid)
+			if req.Method == http.MethodOptions {
+				fmt.Printf("↪ OPTIONS %s %d %dms\n", req.URL.Path, status, duration)
+				return nil
 			}
 
 			headerStr := utils.SanitizeHeaders(req.Header)
@@ -92,22 +87,13 @@ func CustomLogger() echo.MiddlewareFunc {
 			if isError {
 				sb.WriteString("❌ API REQUEST ERROR\n")
 			} else {
-				sb.WriteString("🚀 START API REQUEST\n")
+				sb.WriteString("🚀 API REQUEST\n")
 			}
 			sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
-
-			sb.WriteString("🆔 Request ID:\n")
-			sb.WriteString(reqID + "\n\n")
 
 			sb.WriteString("🌐 URL Endpoint:\n")
 			sb.WriteString(fmt.Sprintf("%s %s %s\n", req.Method, req.URL.String(), req.Proto))
 			sb.WriteString("Host: " + req.Host + "\n\n")
-
-			sb.WriteString("📌 Client Info:\n")
-			sb.WriteString("IP Address : " + c.RealIP() + "\n")
-			sb.WriteString("User Agent : " + req.UserAgent() + "\n")
-			sb.WriteString("User ID    : " + userID + "\n")
-			sb.WriteString("Role       : " + roleID + "\n\n")
 
 			sb.WriteString("📥 Header Request:\n")
 			sb.WriteString(headerStr + "\n\n")
@@ -115,12 +101,11 @@ func CustomLogger() echo.MiddlewareFunc {
 			sb.WriteString("📦 Request Body:\n")
 			sb.WriteString(reqStr + "\n\n")
 
-			sb.WriteString("📤 Response Body:\n")
-			sb.WriteString(resStr + "\n\n")
-
-			sb.WriteString("📊 Response Info:\n")
+			sb.WriteString("📤 Response:\n")
 			sb.WriteString(fmt.Sprintf("Status Code : %d\n", status))
 			sb.WriteString(fmt.Sprintf("Duration    : %dms\n\n", duration))
+			sb.WriteString("Body:\n")
+			sb.WriteString(resStr + "\n\n")
 
 			if isError {
 				var errMsg string
@@ -129,13 +114,13 @@ func CustomLogger() echo.MiddlewareFunc {
 				} else {
 					errMsg = "Client or Server Error"
 				}
-				sb.WriteString("⚠️ Error Message:\n")
+				sb.WriteString("⚠️ Error:\n")
 				sb.WriteString(errMsg + "\n\n")
 				sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-				sb.WriteString("❌ END API REQUEST\n")
+				sb.WriteString("❌ END REQUEST\n")
 			} else {
 				sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-				sb.WriteString("✅ END API REQUEST\n")
+				sb.WriteString("✅ END REQUEST\n")
 			}
 			sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 

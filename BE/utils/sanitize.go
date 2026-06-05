@@ -9,6 +9,7 @@ var sensitiveKeys = []string{
 	"password", "token", "access_token", "refresh_token",
 	"authorization", "authorization-customer", "otp", "pin",
 	"signature", "x-signature", "secret", "client_secret",
+	"accountno", "accountnumber", "amount", "balance", "availablebalance",
 }
 
 func isSensitive(key string) bool {
