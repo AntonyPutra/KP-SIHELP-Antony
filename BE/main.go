@@ -32,6 +32,7 @@ func main() {
 
 	// Run Seeders
 	models.SeedData(config.DB)
+	models.SeedDemoData(config.DB)
 
 	// Create a new Echo instance
 	e := echo.New()
