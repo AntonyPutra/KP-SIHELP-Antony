@@ -25,6 +25,7 @@ func main() {
 		&models.TicketAssignment{},
 		&models.TicketComment{},
 		&models.AuditLog{},
+		&models.TokenBlacklist{},
 	)
 	if err != nil {
 		log.Fatal("Failed to auto-migrate database:", err)

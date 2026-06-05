@@ -66,3 +66,10 @@ type AuditLog struct {
 	HashSignature string    `json:"hash_signature"`
 	CreatedAt     time.Time `json:"created_at"`
 }
+
+type TokenBlacklist struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Token     string    `gorm:"unique;not null;type:text" json:"token"`
+	ExpiredAt time.Time `json:"expired_at"`
+	CreatedAt time.Time `json:"created_at"`
+}

@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"sihelp-backend/config"
+	"sihelp-backend/models"
 	"sihelp-backend/utils"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,6 +22,13 @@ func AuthMiddleware() echo.MiddlewareFunc {
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+			
+			// Check if token is blacklisted
+			var blacklist models.TokenBlacklist
+			if err := config.DB.Where("token = ?", tokenString).First(&blacklist).Error; err == nil {
+				return utils.SendError(c, http.StatusUnauthorized, "Token has been revoked", map[string]interface{}{})
+			}
+
 			secret := os.Getenv("JWT_SECRET")
 			if secret == "" {
 				secret = "supersecretkey123"
