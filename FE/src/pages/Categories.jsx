@@ -4,6 +4,9 @@ import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
+import EmptyState from '../components/ui/EmptyState';
+import { Folders } from 'lucide-react';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -56,21 +59,28 @@ const Categories = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Categories Management</h1>
+    <div className="space-y-6 md:space-y-8 pb-8">
+      <PageHeader 
+        title="Kategori Masalah" 
+        subtitle="Kelola daftar kategori untuk klasifikasi tiket layanan."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
-          <Card title="Add Category">
-            <form onSubmit={handleSubmit}>
-              <Input label="Category Name" value={name} onChange={e => setName(e.target.value)} required />
-              <Button type="submit" className="w-full">Save</Button>
+          <Card title="Tambah Kategori" className="border-t-4 border-t-amber-500">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input label="Nama Kategori" value={name} onChange={e => setName(e.target.value)} placeholder="Misal: Jaringan, Hardware..." required />
+              <Button type="submit" className="w-full">Simpan Kategori</Button>
             </form>
           </Card>
         </div>
         <div className="md:col-span-2">
-          <Card>
-            <Table columns={columns} data={categories} />
+          <Card noPadding className="overflow-hidden h-fit">
+            {categories.length > 0 ? (
+              <Table columns={columns} data={categories} />
+            ) : (
+              <EmptyState icon={Folders} title="Belum ada kategori" subtitle="Tambahkan kategori masalah pertama Anda." />
+            )}
           </Card>
         </div>
       </div>

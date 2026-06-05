@@ -4,6 +4,10 @@ import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
+import EmptyState from '../components/ui/EmptyState';
+import Badge from '../components/ui/Badge';
+import { Users as UsersIcon, Plus } from 'lucide-react';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -39,28 +43,35 @@ const Users = () => {
     { header: 'ID', accessor: 'id' },
     { header: 'Name', accessor: 'name' },
     { header: 'Email', accessor: 'email' },
-    { header: 'Role', render: (row) => row.role?.name || row.role_id },
+    { header: 'Role', render: (row) => (
+      <Badge color={row.role_id === 1 ? 'rose' : row.role_id === 2 ? 'amber' : row.role_id === 4 ? 'emerald' : 'blue'}>
+        {row.role?.name || row.role_id}
+      </Badge>
+    )},
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Users Management</h1>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Add User'}
-        </Button>
-      </div>
+    <div className="space-y-6 md:space-y-8 pb-8">
+      <PageHeader 
+        title="Pengguna Sistem" 
+        subtitle="Kelola data pengguna, petugas, dan hak akses sistem."
+        action={
+          <Button onClick={() => setShowForm(!showForm)} variant={showForm ? 'secondary' : 'primary'}>
+            {showForm ? 'Batal' : <><Plus className="w-4 h-4 mr-2" />Tambah User</>}
+          </Button>
+        }
+      />
 
       {showForm && (
-        <Card title="Add New User">
-          <form onSubmit={handleSubmit}>
-            <Input label="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-            <Input label="Email" type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
-            <Input label="Password" type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Role</label>
+        <Card title="Tambah Pengguna Baru" className="border-t-4 border-t-indigo-500">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Input label="Nama Lengkap" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Masukkan nama..." required />
+            <Input label="Alamat Email" type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="email@contoh.com" required />
+            <Input label="Password Sementara" type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="••••••••" required />
+            <div>
+              <label className="block text-slate-700 text-sm font-semibold mb-1.5">Pilih Peran (Role)</label>
               <select 
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                 value={formData.role_id}
                 onChange={e => setFormData({...formData, role_id: e.target.value})}
               >
@@ -70,13 +81,19 @@ const Users = () => {
                 <option value={4}>Pimpinan</option>
               </select>
             </div>
-            <Button type="submit">Save User</Button>
+            <div className="pt-2">
+              <Button type="submit">Simpan Pengguna</Button>
+            </div>
           </form>
         </Card>
       )}
 
-      <Card>
-        <Table columns={columns} data={users} />
+      <Card noPadding className="overflow-hidden">
+        {users.length > 0 ? (
+          <Table columns={columns} data={users} />
+        ) : (
+          <EmptyState icon={UsersIcon} title="Belum ada pengguna" subtitle="Data pengguna akan tampil di sini." />
+        )}
       </Card>
     </div>
   );
