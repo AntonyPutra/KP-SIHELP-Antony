@@ -70,41 +70,29 @@ func CustomLogger() echo.MiddlewareFunc {
 				return nil
 			}
 
-			headerStr := utils.SanitizeHeaders(req.Header)
-			reqStr := utils.SanitizeJSON(reqBody)
-			if reqStr == "" {
-				reqStr = "{}"
-			}
-			resStr := utils.SanitizeJSON(resBody.Bytes())
-			if resStr == "" {
-				resStr = "{}"
-			}
+			headerStr := utils.CompactHeaders(req.Header)
+			reqStr := utils.CompactRequestBody(reqBody)
+			resStr := utils.CompactResponse(resBody.Bytes())
 
 			isError := status >= 400
 
 			var sb strings.Builder
 			sb.WriteString("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 			if isError {
-				sb.WriteString("❌ API REQUEST ERROR\n")
+				sb.WriteString(fmt.Sprintf("❌ %s %s %d %dms\n", req.Method, req.URL.Path, status, duration))
 			} else {
-				sb.WriteString("🚀 API REQUEST\n")
+				sb.WriteString(fmt.Sprintf("🚀 %s %s %d %dms\n", req.Method, req.URL.Path, status, duration))
 			}
 			sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
 
-			sb.WriteString("🌐 URL Endpoint:\n")
-			sb.WriteString(fmt.Sprintf("%s %s %s\n", req.Method, req.URL.String(), req.Proto))
-			sb.WriteString("Host: " + req.Host + "\n\n")
+			if headerStr != "" {
+				sb.WriteString(headerStr + "\n\n")
+			}
 
-			sb.WriteString("📥 Header Request:\n")
-			sb.WriteString(headerStr + "\n\n")
-
-			sb.WriteString("📦 Request Body:\n")
+			sb.WriteString("📦 Request:\n")
 			sb.WriteString(reqStr + "\n\n")
 
 			sb.WriteString("📤 Response:\n")
-			sb.WriteString(fmt.Sprintf("Status Code : %d\n", status))
-			sb.WriteString(fmt.Sprintf("Duration    : %dms\n\n", duration))
-			sb.WriteString("Body:\n")
 			sb.WriteString(resStr + "\n\n")
 
 			if isError {
@@ -116,11 +104,9 @@ func CustomLogger() echo.MiddlewareFunc {
 				}
 				sb.WriteString("⚠️ Error:\n")
 				sb.WriteString(errMsg + "\n\n")
-				sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-				sb.WriteString("❌ END REQUEST\n")
+				sb.WriteString("❌ END\n")
 			} else {
-				sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-				sb.WriteString("✅ END REQUEST\n")
+				sb.WriteString("✅ END\n")
 			}
 			sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
