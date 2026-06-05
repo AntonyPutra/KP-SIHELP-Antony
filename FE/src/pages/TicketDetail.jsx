@@ -10,18 +10,25 @@ const TicketDetail = () => {
   const { id } = useParams();
   const [ticket, setTicket] = useState(null);
   const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [users, setUsers] = useState([]);
   const [assigneeId, setAssigneeId] = useState('');
 
   const loadData = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const res = await getTicket(id);
       setTicket(res.data);
       const cRes = await getComments(id);
       setComments(cRes.data);
     } catch (e) {
       console.error(e);
+      setError("Gagal memuat detail tiket");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,7 +76,9 @@ const TicketDetail = () => {
     }
   };
 
-  if (!ticket) return <div>Loading...</div>;
+  if (loading) return <div className="flex h-[50vh] items-center justify-center text-slate-500 font-medium">Memuat detail tiket...</div>;
+  if (error) return <div className="flex h-[50vh] items-center justify-center text-red-500 font-medium">{error}</div>;
+  if (!ticket) return <div className="flex h-[50vh] items-center justify-center text-slate-500 font-medium">Tiket tidak ditemukan</div>;
 
   return (
     <div className="space-y-6 md:space-y-8">

@@ -14,6 +14,8 @@ import { Ticket as TicketIcon, Plus, Search, Filter } from 'lucide-react';
 const Tickets = () => {
   const [tickets, setTickets] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ title: '', description: '', priority: 'Low', category_id: '' });
   
@@ -25,10 +27,15 @@ const Tickets = () => {
 
   const loadTickets = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const res = await getTickets();
       setTickets(res.data || []);
     } catch (e) {
       console.error(e);
+      setError("Gagal memuat tiket");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -205,7 +212,11 @@ const Tickets = () => {
       </div>
 
       <Card noPadding className="overflow-hidden">
-        {filteredTickets.length > 0 ? (
+        {loading ? (
+          <div className="p-8 text-center text-slate-500">Memuat tiket...</div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : filteredTickets.length > 0 ? (
           <Table 
             columns={columns} 
             data={filteredTickets} 

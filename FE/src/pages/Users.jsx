@@ -11,15 +11,22 @@ import { Users as UsersIcon, Plus } from 'lucide-react';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role_id: 3 });
 
   const loadUsers = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const res = await getUsers();
-      setUsers(res.data);
+      setUsers(res.data || []);
     } catch (e) {
       console.error(e);
+      setError("Gagal memuat pengguna");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,7 +96,11 @@ const Users = () => {
       )}
 
       <Card noPadding className="overflow-hidden">
-        {users.length > 0 ? (
+        {loading ? (
+          <div className="p-8 text-center text-slate-500">Memuat pengguna...</div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : users.length > 0 ? (
           <Table columns={columns} data={users} />
         ) : (
           <EmptyState icon={UsersIcon} title="Belum ada pengguna" subtitle="Data pengguna akan tampil di sini." />

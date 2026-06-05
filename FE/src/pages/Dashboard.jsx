@@ -42,11 +42,15 @@ const Dashboard = () => {
   const [categoryData, setCategoryData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
   const [recentTickets, setRecentTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const sum = await getDashboardSummary();
         setSummary(sum.data);
 
@@ -63,12 +67,17 @@ const Dashboard = () => {
         setRecentTickets(ticketsRes.data ? ticketsRes.data.slice(0, 5) : []);
       } catch (err) {
         console.error("Failed to load dashboard data", err);
+        setError("Gagal memuat dashboard");
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
 
-  if (!summary) return <div className="flex h-[50vh] items-center justify-center text-slate-500 font-medium">Memuat dashboard...</div>;
+  if (loading) return <div className="flex h-[50vh] items-center justify-center text-slate-500 font-medium">Memuat dashboard...</div>;
+  if (error) return <div className="flex h-[50vh] items-center justify-center text-red-500 font-medium">{error}</div>;
+  if (!summary) return <div className="flex h-[50vh] items-center justify-center text-slate-500 font-medium">Data tidak ditemukan</div>;
 
   const statusChartData = {
     labels: statusData.map(d => d.status),

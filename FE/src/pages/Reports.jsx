@@ -11,19 +11,26 @@ import { FileText, Filter as FilterIcon } from 'lucide-react';
 
 const Reports = () => {
   const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ start_date: '', end_date: '', status: '' });
 
   const loadData = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const params = {};
       if (filters.start_date) params.start_date = filters.start_date;
       if (filters.end_date) params.end_date = filters.end_date;
       if (filters.status) params.status = filters.status;
       
       const res = await getReportTickets(params);
-      setTickets(res.data);
+      setTickets(res.data || []);
     } catch (e) {
       console.error(e);
+      setError("Gagal memuat laporan");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,7 +84,11 @@ const Reports = () => {
           </div>
         </form>
         <div className="-mx-6 sm:-mx-8 -mb-5 sm:-mb-8 mt-6">
-          {tickets.length > 0 ? (
+          {loading ? (
+            <div className="p-8 text-center text-slate-500">Memuat laporan...</div>
+          ) : error ? (
+            <div className="p-8 text-center text-red-500">{error}</div>
+          ) : tickets.length > 0 ? (
             <Table columns={columns} data={tickets} />
           ) : (
             <EmptyState icon={FileText} title="Tidak ada laporan" subtitle="Silakan sesuaikan filter tanggal atau status untuk melihat data." />

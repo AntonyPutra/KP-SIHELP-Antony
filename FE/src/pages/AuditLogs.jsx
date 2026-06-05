@@ -8,13 +8,20 @@ import { History } from 'lucide-react';
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const loadData = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const res = await getAuditLogs();
-      setLogs(res.data);
+      setLogs(res.data || []);
     } catch (e) {
       console.error(e);
+      setError("Gagal memuat audit logs");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,7 +57,11 @@ const AuditLogs = () => {
         subtitle="Rekaman jejak aktivitas pengguna, manipulasi data, dan kejadian sistem untuk keamanan."
       />
       <Card noPadding className="overflow-hidden">
-        {logs.length > 0 ? (
+        {loading ? (
+          <div className="p-8 text-center text-slate-500">Memuat audit logs...</div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : logs.length > 0 ? (
           <Table columns={columns} data={logs} />
         ) : (
           <EmptyState icon={History} title="Tidak ada catatan audit" subtitle="Sistem belum mencatat aktivitas apapun." />

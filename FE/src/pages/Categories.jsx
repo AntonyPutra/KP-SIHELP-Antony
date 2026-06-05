@@ -10,14 +10,21 @@ import { Folders } from 'lucide-react';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [name, setName] = useState('');
 
   const loadCategories = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const res = await getCategories();
-      setCategories(res.data);
+      setCategories(res.data || []);
     } catch (e) {
       console.error(e);
+      setError("Gagal memuat kategori");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,7 +83,11 @@ const Categories = () => {
         </div>
         <div className="md:col-span-2">
           <Card noPadding className="overflow-hidden h-fit">
-            {categories.length > 0 ? (
+            {loading ? (
+              <div className="p-8 text-center text-slate-500">Memuat kategori...</div>
+            ) : error ? (
+              <div className="p-8 text-center text-red-500">{error}</div>
+            ) : categories.length > 0 ? (
               <Table columns={columns} data={categories} />
             ) : (
               <EmptyState icon={Folders} title="Belum ada kategori" subtitle="Tambahkan kategori masalah pertama Anda." />
