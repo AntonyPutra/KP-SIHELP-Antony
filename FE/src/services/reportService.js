@@ -1,16 +1,16 @@
 import api from './api';
 
 export const getReportTickets = async (params) => {
-  const response = await api.get('/reports/tickets', { params });
+  const response = await api.post('/reports/tickets', params);
   return response.data;
 };
 
 export const getReportSummary = async (params) => {
-  const response = await api.get('/reports/tickets/summary', { params });
+  const response = await api.post('/reports/tickets/summary', params);
   return response.data;
 };
 
-export const getAuditLogs = async () => {
-  const response = await api.get('/audit-logs');
+export const getAuditLogs = async (params = {}) => {
+  const response = await api.post('/audit-logs/list', params);
   return response.data;
 };

@@ -10,30 +10,43 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type ReportFilterRequest struct {
+	StartDate  string `json:"start_date"`
+	EndDate    string `json:"end_date"`
+	Status     string `json:"status"`
+	CategoryID *uint  `json:"category_id"`
+	Priority   string `json:"priority"`
+	AssignedTo *uint  `json:"assigned_to"`
+	ReporterID *uint  `json:"reporter_id"`
+}
+
 func GetReportTickets(c echo.Context) error {
+	var req ReportFilterRequest
+	c.Bind(&req)
+
 	query := config.DB.Preload("Category").Preload("User")
 
-	if start := c.QueryParam("start_date"); start != "" {
-		query = query.Where("created_at >= ?", start)
+	if req.StartDate != "" {
+		query = query.Where("created_at >= ?", req.StartDate)
 	}
-	if end := c.QueryParam("end_date"); end != "" {
-		query = query.Where("created_at <= ?", end)
+	if req.EndDate != "" {
+		query = query.Where("created_at <= ?", req.EndDate)
 	}
-	if status := c.QueryParam("status"); status != "" {
-		query = query.Where("status = ?", status)
+	if req.Status != "" {
+		query = query.Where("status = ?", req.Status)
 	}
-	if catID := c.QueryParam("category_id"); catID != "" {
-		query = query.Where("category_id = ?", catID)
+	if req.CategoryID != nil {
+		query = query.Where("category_id = ?", *req.CategoryID)
 	}
-	if priority := c.QueryParam("priority"); priority != "" {
-		query = query.Where("priority = ?", priority)
+	if req.Priority != "" {
+		query = query.Where("priority = ?", req.Priority)
 	}
-	if reporter := c.QueryParam("reporter_id"); reporter != "" {
-		query = query.Where("user_id = ?", reporter)
+	if req.ReporterID != nil {
+		query = query.Where("user_id = ?", *req.ReporterID)
 	}
-	if assignedTo := c.QueryParam("assigned_to"); assignedTo != "" {
+	if req.AssignedTo != nil {
 		query = query.Joins("JOIN ticket_assignments ON ticket_assignments.ticket_id = tickets.id").
-			Where("ticket_assignments.user_id = ?", assignedTo)
+			Where("ticket_assignments.user_id = ?", *req.AssignedTo)
 	}
 
 	var tickets []models.Ticket
@@ -44,15 +57,23 @@ func GetReportTickets(c echo.Context) error {
 	return utils.SendSuccess(c, http.StatusOK, "Ticket reports retrieved successfully", tickets)
 }
 
+type ReportSummaryRequest struct {
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+}
+
 func GetReportSummary(c echo.Context) error {
+	var req ReportSummaryRequest
+	c.Bind(&req)
+
 	var total int64
 	query := config.DB.Model(&models.Ticket{})
 
-	if start := c.QueryParam("start_date"); start != "" {
-		query = query.Where("created_at >= ?", start)
+	if req.StartDate != "" {
+		query = query.Where("created_at >= ?", req.StartDate)
 	}
-	if end := c.QueryParam("end_date"); end != "" {
-		query = query.Where("created_at <= ?", end)
+	if req.EndDate != "" {
+		query = query.Where("created_at <= ?", req.EndDate)
 	}
 
 	query.Count(&total)

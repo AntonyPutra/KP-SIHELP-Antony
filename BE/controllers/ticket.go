@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"sihelp-backend/config"
 	"sihelp-backend/middlewares"
@@ -12,9 +11,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type GetTicketsRequest struct {
+	Search     string `json:"search"`
+	Status     string `json:"status"`
+	Priority   string `json:"priority"`
+	CategoryID *uint  `json:"category_id"`
+	AssignedTo *uint  `json:"assigned_to"`
+	ReporterID *uint  `json:"reporter_id"`
+}
+
 func GetTickets(c echo.Context) error {
 	roleID := c.Get("role_id").(uint)
 	userID := c.Get("user_id").(uint)
+
+	var req GetTicketsRequest
+	c.Bind(&req)
 
 	query := config.DB.Preload("Category").Preload("User")
 
@@ -25,14 +36,27 @@ func GetTickets(c echo.Context) error {
 			Where("ticket_assignments.user_id = ?", userID)
 	}
 
-	if status := c.QueryParam("status"); status != "" {
-		query = query.Where("status = ?", status)
+	if req.Search != "" {
+		query = query.Where("title LIKE ?", "%"+req.Search+"%")
 	}
-	if priority := c.QueryParam("priority"); priority != "" {
-		query = query.Where("priority = ?", priority)
+	if req.Status != "" {
+		query = query.Where("status = ?", req.Status)
 	}
-	if catID := c.QueryParam("category_id"); catID != "" {
-		query = query.Where("category_id = ?", catID)
+	if req.Priority != "" {
+		query = query.Where("priority = ?", req.Priority)
+	}
+	if req.CategoryID != nil {
+		query = query.Where("category_id = ?", *req.CategoryID)
+	}
+	if req.AssignedTo != nil {
+		// Needs join if not already joined
+		if roleID != middlewares.RolePetugas {
+			query = query.Joins("JOIN ticket_assignments ON ticket_assignments.ticket_id = tickets.id").
+				Where("ticket_assignments.user_id = ?", *req.AssignedTo)
+		}
+	}
+	if req.ReporterID != nil {
+		query = query.Where("user_id = ?", *req.ReporterID)
 	}
 
 	var tickets []models.Ticket
@@ -75,11 +99,18 @@ func CreateTicket(c echo.Context) error {
 	return utils.SendSuccess(c, http.StatusCreated, "Ticket created successfully", ticket)
 }
 
+type IDTicketRequest struct {
+	ID uint `json:"id"`
+}
+
 func GetTicket(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	var req IDTicketRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
 	
 	var ticket models.Ticket
-	if err := config.DB.Preload("Category").Preload("User").First(&ticket, id).Error; err != nil {
+	if err := config.DB.Preload("Category").Preload("User").First(&ticket, req.ID).Error; err != nil {
 		return utils.SendError(c, http.StatusNotFound, "Ticket not found", nil)
 	}
 
@@ -87,6 +118,7 @@ func GetTicket(c echo.Context) error {
 }
 
 type UpdateTicketRequest struct {
+	ID          uint   `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Priority    string `json:"priority"`
@@ -94,17 +126,16 @@ type UpdateTicketRequest struct {
 }
 
 func UpdateTicket(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
 	userID := c.Get("user_id").(uint)
-
-	var ticket models.Ticket
-	if err := config.DB.First(&ticket, id).Error; err != nil {
-		return utils.SendError(c, http.StatusNotFound, "Ticket not found", nil)
-	}
 
 	var req UpdateTicketRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	var ticket models.Ticket
+	if err := config.DB.First(&ticket, req.ID).Error; err != nil {
+		return utils.SendError(c, http.StatusNotFound, "Ticket not found", nil)
 	}
 
 	ticket.Title = req.Title
@@ -121,21 +152,21 @@ func UpdateTicket(c echo.Context) error {
 }
 
 type UpdateStatusRequest struct {
+	ID     uint   `json:"id"`
 	Status string `json:"status"`
 }
 
 func UpdateTicketStatus(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
 	userID := c.Get("user_id").(uint)
-
-	var ticket models.Ticket
-	if err := config.DB.First(&ticket, id).Error; err != nil {
-		return utils.SendError(c, http.StatusNotFound, "Ticket not found", nil)
-	}
 
 	var req UpdateStatusRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	var ticket models.Ticket
+	if err := config.DB.First(&ticket, req.ID).Error; err != nil {
+		return utils.SendError(c, http.StatusNotFound, "Ticket not found", nil)
 	}
 
 	ticket.Status = req.Status
@@ -148,11 +179,11 @@ func UpdateTicketStatus(c echo.Context) error {
 }
 
 type AssignTicketRequest struct {
-	PetugasID uint `json:"petugas_id"`
+	TicketID uint `json:"ticket_id"`
+	UserID   uint `json:"user_id"`
 }
 
 func AssignTicket(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
 	adminID := c.Get("user_id").(uint)
 
 	var req AssignTicketRequest
@@ -161,28 +192,32 @@ func AssignTicket(c echo.Context) error {
 	}
 
 	assignment := models.TicketAssignment{
-		TicketID: uint(id),
-		UserID:   req.PetugasID,
+		TicketID: req.TicketID,
+		UserID:   req.UserID,
 	}
 
 	if err := config.DB.Create(&assignment).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to assign ticket", err.Error())
 	}
 
-	config.DB.Model(&models.Ticket{}).Where("id = ?", id).Update("status", "Diproses")
+	config.DB.Model(&models.Ticket{}).Where("id = ?", req.TicketID).Update("status", "Diproses")
 
 	utils.LogAudit(adminID, "ASSIGN_TICKET", "ticket_assignments", assignment.ID)
 	return utils.SendSuccess(c, http.StatusOK, "Ticket assigned successfully", assignment)
 }
 
 func DeleteTicket(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
 	adminID := c.Get("user_id").(uint)
 
-	if err := config.DB.Delete(&models.Ticket{}, id).Error; err != nil {
+	var req IDTicketRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	if err := config.DB.Delete(&models.Ticket{}, req.ID).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to delete ticket", nil)
 	}
 
-	utils.LogAudit(adminID, "DELETE_TICKET", "tickets", uint(id))
+	utils.LogAudit(adminID, "DELETE_TICKET", "tickets", req.ID)
 	return utils.SendSuccess(c, http.StatusOK, "Ticket deleted successfully", nil)
 }

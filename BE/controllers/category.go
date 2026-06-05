@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"sihelp-backend/config"
 	"sihelp-backend/models"
@@ -11,9 +10,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type GetCategoriesRequest struct {
+	Search string `json:"search"`
+}
+
 func GetCategories(c echo.Context) error {
+	var req GetCategoriesRequest
+	c.Bind(&req)
+
+	query := config.DB
+	if req.Search != "" {
+		query = query.Where("name LIKE ?", "%"+req.Search+"%")
+	}
+
 	var categories []models.TicketCategory
-	if err := config.DB.Find(&categories).Error; err != nil {
+	if err := query.Find(&categories).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to fetch categories", nil)
 	}
 	return utils.SendSuccess(c, http.StatusOK, "Categories retrieved successfully", categories)
@@ -37,16 +48,37 @@ func CreateCategory(c echo.Context) error {
 	return utils.SendSuccess(c, http.StatusCreated, "Category created successfully", category)
 }
 
-func UpdateCategory(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	var category models.TicketCategory
-	if err := config.DB.First(&category, id).Error; err != nil {
-		return utils.SendError(c, http.StatusNotFound, "Category not found", nil)
-	}
+type IDCategoryRequest struct {
+	ID uint `json:"id"`
+}
 
-	var req CreateCategoryRequest
+func GetCategoryDetail(c echo.Context) error {
+	var req IDCategoryRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	var category models.TicketCategory
+	if err := config.DB.First(&category, req.ID).Error; err != nil {
+		return utils.SendError(c, http.StatusNotFound, "Category not found", nil)
+	}
+	return utils.SendSuccess(c, http.StatusOK, "Category retrieved successfully", category)
+}
+
+type UpdateCategoryRequest struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+func UpdateCategory(c echo.Context) error {
+	var req UpdateCategoryRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	var category models.TicketCategory
+	if err := config.DB.First(&category, req.ID).Error; err != nil {
+		return utils.SendError(c, http.StatusNotFound, "Category not found", nil)
 	}
 
 	category.Name = req.Name
@@ -58,8 +90,12 @@ func UpdateCategory(c echo.Context) error {
 }
 
 func DeleteCategory(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	if err := config.DB.Delete(&models.TicketCategory{}, id).Error; err != nil {
+	var req IDCategoryRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	if err := config.DB.Delete(&models.TicketCategory{}, req.ID).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to delete category", nil)
 	}
 	return utils.SendSuccess(c, http.StatusOK, "Category deleted successfully", nil)

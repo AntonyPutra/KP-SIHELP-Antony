@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"sihelp-backend/config"
 	"sihelp-backend/models"
@@ -11,18 +10,42 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type GetUsersRequest struct {
+	Search string `json:"search"`
+	RoleID *uint  `json:"role_id"`
+}
+
 func GetUsers(c echo.Context) error {
+	var req GetUsersRequest
+	c.Bind(&req)
+
+	query := config.DB.Preload("Role")
+	if req.Search != "" {
+		query = query.Where("name LIKE ? OR email LIKE ?", "%"+req.Search+"%", "%"+req.Search+"%")
+	}
+	if req.RoleID != nil {
+		query = query.Where("role_id = ?", *req.RoleID)
+	}
+
 	var users []models.User
-	if err := config.DB.Preload("Role").Find(&users).Error; err != nil {
+	if err := query.Find(&users).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to fetch users", nil)
 	}
 	return utils.SendSuccess(c, http.StatusOK, "Users retrieved successfully", users)
 }
 
+type IDRequest struct {
+	ID uint `json:"id"`
+}
+
 func GetUser(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	var req IDRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
 	var user models.User
-	if err := config.DB.Preload("Role").First(&user, id).Error; err != nil {
+	if err := config.DB.Preload("Role").First(&user, req.ID).Error; err != nil {
 		return utils.SendError(c, http.StatusNotFound, "User not found", nil)
 	}
 	return utils.SendSuccess(c, http.StatusOK, "User retrieved successfully", user)
@@ -61,21 +84,21 @@ func CreateUser(c echo.Context) error {
 }
 
 type UpdateUserRequest struct {
+	ID     uint   `json:"id"`
 	Name   string `json:"name"`
 	Email  string `json:"email"`
 	RoleID uint   `json:"role_id"`
 }
 
 func UpdateUser(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	var user models.User
-	if err := config.DB.First(&user, id).Error; err != nil {
-		return utils.SendError(c, http.StatusNotFound, "User not found", nil)
-	}
-
 	var req UpdateUserRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, req.ID).Error; err != nil {
+		return utils.SendError(c, http.StatusNotFound, "User not found", nil)
 	}
 
 	user.Name = req.Name
@@ -90,8 +113,12 @@ func UpdateUser(c echo.Context) error {
 }
 
 func DeleteUser(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	if err := config.DB.Delete(&models.User{}, id).Error; err != nil {
+	var req IDRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	if err := config.DB.Delete(&models.User{}, req.ID).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to delete user", nil)
 	}
 	return utils.SendSuccess(c, http.StatusOK, "User deleted successfully", nil)

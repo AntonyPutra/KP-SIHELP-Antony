@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"sihelp-backend/config"
 	"sihelp-backend/models"
@@ -11,11 +10,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type TicketIDRequest struct {
+	TicketID uint `json:"ticket_id"`
+}
+
 func GetComments(c echo.Context) error {
-	ticketID, _ := strconv.Atoi(c.Param("id"))
+	var req TicketIDRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
 
 	var comments []models.TicketComment
-	if err := config.DB.Where("ticket_id = ?", ticketID).Preload("User").Find(&comments).Error; err != nil {
+	if err := config.DB.Where("ticket_id = ?", req.TicketID).Preload("User").Find(&comments).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to fetch comments", nil)
 	}
 
@@ -23,11 +29,11 @@ func GetComments(c echo.Context) error {
 }
 
 type CreateCommentRequest struct {
-	Comment string `json:"comment"`
+	TicketID uint   `json:"ticket_id"`
+	Comment  string `json:"comment"`
 }
 
 func CreateComment(c echo.Context) error {
-	ticketID, _ := strconv.Atoi(c.Param("id"))
 	userID := c.Get("user_id").(uint)
 
 	var req CreateCommentRequest
@@ -36,7 +42,7 @@ func CreateComment(c echo.Context) error {
 	}
 
 	comment := models.TicketComment{
-		TicketID: uint(ticketID),
+		TicketID: req.TicketID,
 		UserID:   userID,
 		Comment:  req.Comment,
 	}
