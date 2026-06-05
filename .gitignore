@@ -1,0 +1,9 @@
+# Deployment archives
+*.tar.gz
+*.zip
+
+# Backend Env
+BE/.env
+
+# Local overrides
+docker-compose.override.yml

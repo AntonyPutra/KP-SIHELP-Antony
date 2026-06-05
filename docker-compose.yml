@@ -1,0 +1,46 @@
+services:
+  sihelp_postgres:
+    image: postgres:15-alpine
+    container_name: sihelp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sihelp_user
+      POSTGRES_PASSWORD: sihelp_password
+      POSTGRES_DB: sihelp_db
+    volumes:
+      - sihelp_pgdata:/var/lib/postgresql/data
+    networks:
+      - sihelp_network
+
+  sihelp_backend:
+    build: ./BE
+    container_name: sihelp_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./BE/.env.production
+    depends_on:
+      - sihelp_postgres
+    networks:
+      - sihelp_network
+
+  sihelp_frontend:
+    build:
+      context: ./FE
+      args:
+        - VITE_API_BASE_URL=http://100.73.16.92:8000
+    container_name: sihelp_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - sihelp_backend
+    networks:
+      - sihelp_network
+
+volumes:
+  sihelp_pgdata:
+
+networks:
+  sihelp_network:
