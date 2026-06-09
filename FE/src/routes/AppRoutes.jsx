@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { getToken } from '../utils/auth';
 import MainLayout from '../components/layout/MainLayout';
 import Login from '../pages/Login';
+import OTPLogin from '../pages/OTPLogin';
 import Dashboard from '../pages/Dashboard';
 import Users from '../pages/Users';
 import Categories from '../pages/Categories';
@@ -23,6 +24,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/login-otp" element={<OTPLogin />} />
       
       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />

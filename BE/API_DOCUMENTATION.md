@@ -103,6 +103,70 @@ Sistem menerapkan kendali akses berbasis *Role-Based Access Control* (RBAC) deng
 - **Role Access:** All Roles
 - **Request Body:** `{}`
 
+#### POST `/api/auth/request-otp`
+- **Auth Required:** No
+- **Role Access:** Public
+- **Request Body:**
+  ```json
+  {
+    "email": "admin@sihelp.local",
+    "purpose": "login"
+  }
+  ```
+- **Success Response:**
+  ```json
+  {
+    "success": true,
+    "message": "OTP sent successfully",
+    "data": {
+      "otp_session_token": "a1b2c3d4..."
+    }
+  }
+  ```
+
+#### POST `/api/auth/verify-otp`
+- **Auth Required:** No
+- **Role Access:** Public
+- **Request Body:**
+  ```json
+  {
+    "otp_session_token": "a1b2c3d4...",
+    "otp": "123456",
+    "purpose": "login"
+  }
+  ```
+- **Success Response:**
+  ```json
+  {
+    "success": true,
+    "message": "Login successful",
+    "data": {
+      "token": "eyJhbG..."
+    }
+  }
+  ```
+
+#### POST `/api/auth/resend-otp`
+- **Auth Required:** No
+- **Role Access:** Public
+- **Request Body:**
+  ```json
+  {
+    "otp_session_token": "a1b2c3d4...",
+    "purpose": "login"
+  }
+  ```
+- **Success Response:**
+  ```json
+  {
+    "success": true,
+    "message": "OTP resent successfully",
+    "data": {
+      "otp_session_token": "x9y8z7..."
+    }
+  }
+  ```
+
 ---
 
 ### User API

@@ -11,6 +11,7 @@ var sensitiveKeys = []string{
 	"authorization", "authorization-customer", "otp", "pin",
 	"signature", "x-signature", "secret", "client_secret",
 	"accountno", "accountnumber", "amount", "balance", "availablebalance",
+	"otp_session_token", "reset_password_token", "smtp_password",
 }
 
 func isSensitive(key string) bool {
@@ -73,7 +74,7 @@ func CompactHeaders(headers map[string][]string) string {
 				continue
 			}
 		}
-		
+
 		if !found {
 			result.WriteString("🔐 Headers:\n")
 			found = true
@@ -128,7 +129,7 @@ func CompactResponse(data []byte) string {
 	if dataField, ok := parsed["data"]; ok && dataField != nil {
 		if slice, isSlice := dataField.([]interface{}); isSlice {
 			sb.WriteString(fmt.Sprintf("items   : %d\n\n", len(slice)))
-			
+
 			previewCount := len(slice)
 			if previewCount > 2 {
 				previewCount = 2
@@ -153,7 +154,7 @@ func CompactResponse(data []byte) string {
 								compactItem["hash_signature"] = hashStr
 							}
 						}
-						
+
 						itemJSON, _ := json.MarshalIndent(compactItem, "  ", "  ")
 						sb.WriteString("  " + strings.TrimSpace(string(itemJSON)))
 						if i < previewCount-1 || len(slice) > previewCount {

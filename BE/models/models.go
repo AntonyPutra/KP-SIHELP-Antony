@@ -73,3 +73,19 @@ type TokenBlacklist struct {
 	ExpiredAt time.Time `json:"expired_at"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type EmailOTP struct {
+	ID              uint      `gorm:"primaryKey" json:"id"`
+	UserID          uint      `json:"user_id"`
+	User            User      `gorm:"foreignKey:UserID" json:"user"`
+	Email           string    `gorm:"not null" json:"email"`
+	OTPSessionToken string    `gorm:"not null;unique" json:"-"`
+	OTP             string    `gorm:"not null" json:"-"`
+	Purpose         string    `gorm:"default:'login'" json:"purpose"`
+	Status          string    `gorm:"default:'pending'" json:"status"`
+	Attempts        int       `gorm:"default:0" json:"attempts"`
+	ResendCount     int       `gorm:"default:0" json:"resend_count"`
+	LastSentAt      time.Time `json:"last_sent_at"`
+	ExpiredAt       time.Time `json:"expired_at"`
+	CreatedAt       time.Time `json:"created_at"`
+}

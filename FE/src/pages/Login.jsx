@@ -125,6 +125,16 @@ const Login = () => {
                   {loading ? 'Memproses...' : 'Masuk Sekarang'}
                 </Button>
               </div>
+              
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/login-otp')}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  Atau Login dengan OTP Email
+                </button>
+              </div>
             </form>
           </div>
           

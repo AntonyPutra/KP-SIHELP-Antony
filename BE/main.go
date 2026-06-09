@@ -26,6 +26,7 @@ func main() {
 		&models.TicketComment{},
 		&models.AuditLog{},
 		&models.TokenBlacklist{},
+		&models.EmailOTP{},
 	)
 	if err != nil {
 		log.Fatal("Failed to auto-migrate database:", err)
@@ -65,6 +66,9 @@ func main() {
 	// Auth Routes
 	api.POST("/auth/login", controllers.Login)
 	api.POST("/auth/logout", controllers.Logout)
+	api.POST("/auth/request-otp", controllers.RequestOTP)
+	api.POST("/auth/verify-otp", controllers.VerifyOTP)
+	api.POST("/auth/resend-otp", controllers.ResendOTP)
 
 	// Protected Routes
 	protected := api.Group("")
