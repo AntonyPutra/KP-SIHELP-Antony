@@ -7,6 +7,8 @@ services:
       POSTGRES_USER: sihelp_user
       POSTGRES_PASSWORD: sihelp_password
       POSTGRES_DB: sihelp_db
+    ports:
+      - "5432:5432"
     volumes:
       - sihelp_pgdata:/var/lib/postgresql/data
     networks:
@@ -29,7 +31,7 @@ services:
     build:
       context: ./FE
       args:
-        - VITE_API_BASE_URL=http://100.73.16.92:8000
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://api.whaleestudio.my.id}
     container_name: sihelp_frontend
     restart: unless-stopped
     ports:

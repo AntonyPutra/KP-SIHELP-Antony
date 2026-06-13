@@ -11,36 +11,43 @@ export const createTicket = async (data) => {
 };
 
 export const getTicket = async (id) => {
-  const response = await api.post('/tickets/detail', { id });
+  const ticketId = Number(id);
+  const response = await api.post('/tickets/detail', { id: ticketId });
   return response.data;
 };
 
 export const updateTicket = async (id, data) => {
-  const response = await api.post('/tickets/update', { id, ...data });
+  const ticketId = Number(id);
+  const response = await api.post('/tickets/update', { id: ticketId, ...data });
   return response.data;
 };
 
 export const updateTicketStatus = async (id, status) => {
-  const response = await api.post('/tickets/update-status', { id, status });
+  const ticketId = Number(id);
+  const response = await api.post('/tickets/update-status', { id: ticketId, status });
   return response.data;
 };
 
 export const assignTicket = async (id, petugasId) => {
-  const response = await api.post('/tickets/assign', { ticket_id: id, user_id: petugasId });
+  const ticketId = Number(id);
+  const response = await api.post('/tickets/assign', { ticket_id: ticketId, user_id: petugasId });
   return response.data;
 };
 
 export const deleteTicket = async (id) => {
-  const response = await api.post('/tickets/delete', { id });
+  const ticketId = Number(id);
+  const response = await api.post('/tickets/delete', { id: ticketId });
   return response.data;
 };
 
 export const getComments = async (id) => {
-  const response = await api.post('/comments/list', { ticket_id: id });
+  const ticketId = Number(id);
+  const response = await api.post('/comments/list', { ticket_id: ticketId });
   return response.data;
 };
 
 export const createComment = async (id, comment) => {
-  const response = await api.post('/comments/create', { ticket_id: id, comment });
+  const ticketId = Number(id);
+  const response = await api.post('/comments/create', { ticket_id: ticketId, comment });
   return response.data;
 };
