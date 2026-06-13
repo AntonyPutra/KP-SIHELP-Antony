@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"sihelp-backend/config"
 	"sihelp-backend/models"
@@ -77,7 +78,7 @@ Deskripsi Asli: %s
 Kategori Hint: %s
 Prioritas Hint: %s
 
-Kamu wajib membalas hanya JSON valid. Jangan gunakan markdown. Jangan beri penjelasan. Jangan awali dengan kata Baik atau Berikut. Respons harus dimulai dengan karakter { dan diakhiri dengan karakter }. Gunakan key persis sesuai schema yang diminta. Jangan mengganti nama key.
+Kamu wajib membalas hanya JSON valid. Output harus Bahasa Indonesia. Semua key wajib terisi. Jangan izinkan empty string. recommended_steps wajib array string minimal 3 item. Jangan gunakan markdown. Jangan beri penjelasan. Jangan awali dengan kata Baik atau Berikut. Respons harus dimulai dengan karakter { dan diakhiri dengan karakter }. Gunakan key persis sesuai schema yang diminta. Jangan mengganti nama key.
 Format JSON yang diharapkan:
 {
   "improved_title": "string",
@@ -85,7 +86,7 @@ Format JSON yang diharapkan:
   "suggested_category": "string",
   "suggested_priority": "Low|Medium|High|Critical",
   "summary": "string",
-  "recommended_steps": ["string"]
+  "recommended_steps": ["string", "string", "string"]
 }`, req.Title, req.Description, req.CategoryHint, req.PriorityHint)
 
 	provider, err := utils.GetAIProvider()
@@ -107,7 +108,11 @@ Format JSON yang diharapkan:
 		rawData["suggested_category"] = val
 	}
 	if val, ok := rawData["recommended_categories"]; ok && rawData["suggested_category"] == nil {
-		rawData["suggested_category"] = val
+		if arr, isArr := val.([]interface{}); isArr && len(arr) > 0 {
+			rawData["suggested_category"] = arr[0]
+		} else {
+			rawData["suggested_category"] = val
+		}
 	}
 	if val, ok := rawData["priority"]; ok && rawData["suggested_priority"] == nil {
 		rawData["suggested_priority"] = val
@@ -133,6 +138,8 @@ Format JSON yang diharapkan:
 					newSteps = append(newSteps, text)
 				} else if text, ok := v["text"].(string); ok {
 					newSteps = append(newSteps, text)
+				} else if text, ok := v["title"].(string); ok {
+					newSteps = append(newSteps, text)
 				} else {
 					b, _ := json.Marshal(v)
 					newSteps = append(newSteps, string(b))
@@ -145,6 +152,40 @@ Format JSON yang diharapkan:
 	var aiData TicketSuggestionResponse
 	b, _ := json.Marshal(rawData)
 	json.Unmarshal(b, &aiData)
+
+	// Fallback Logic
+	if aiData.ImprovedTitle == "" {
+		aiData.ImprovedTitle = req.Title
+	}
+	if aiData.ImprovedDescription == "" {
+		aiData.ImprovedDescription = req.Description
+	}
+	if aiData.SuggestedCategory == "" {
+		lowerDesc := strings.ToLower(req.Title + " " + req.Description)
+		if strings.Contains(lowerDesc, "internet") || strings.Contains(lowerDesc, "koneksi") || 
+			strings.Contains(lowerDesc, "jaringan") || strings.Contains(lowerDesc, "router") || 
+			strings.Contains(lowerDesc, "wifi") || strings.Contains(lowerDesc, "modem") {
+			aiData.SuggestedCategory = "Jaringan"
+		} else {
+			aiData.SuggestedCategory = "Umum"
+		}
+	}
+	if aiData.SuggestedPriority == "" || 
+		(aiData.SuggestedPriority != "Low" && aiData.SuggestedPriority != "Medium" && 
+		aiData.SuggestedPriority != "High" && aiData.SuggestedPriority != "Critical") {
+		aiData.SuggestedPriority = "Medium"
+	}
+	if aiData.Summary == "" {
+		aiData.Summary = "Ringkasan sederhana dari: " + req.Title
+	}
+	if len(aiData.RecommendedSteps) == 0 {
+		aiData.RecommendedSteps = []string{
+			"Periksa kondisi perangkat jaringan.",
+			"Cek koneksi internet dan status layanan.",
+			"Restart perangkat jaringan jika diperlukan.",
+			"Eskalasi ke petugas teknis apabila gangguan berulang.",
+		}
+	}
 
 	return utils.SendSuccess(c, http.StatusOK, "AI ticket suggestion generated", aiData)
 }
