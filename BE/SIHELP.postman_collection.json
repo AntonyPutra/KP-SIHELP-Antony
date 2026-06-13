@@ -1098,6 +1098,104 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "AI Assistant",
+			"item": [
+				{
+					"name": "Ticket Suggestion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Internet kantor tidak stabil\",\n  \"description\": \"Koneksi sering putus setiap 10 menit\",\n  \"category_hint\": \"\",\n  \"priority_hint\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ai/ticket-suggestion",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ai",
+								"ticket-suggestion"
+							]
+						}
+					}
+				},
+				{
+					"name": "Ticket Summary",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ticket_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ai/ticket-summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ai",
+								"ticket-summary"
+							]
+						}
+					}
+				},
+				{
+					"name": "Reply Suggestion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ticket_id\": 1,\n  \"tone\": \"professional\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ai/reply-suggestion",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ai",
+								"reply-suggestion"
+							]
+						}
+					}
+				}
+			]
 		}
 	]
 }

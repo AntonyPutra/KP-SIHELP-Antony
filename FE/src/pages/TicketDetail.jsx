@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getTicket, getComments, createComment, updateTicketStatus, assignTicket } from '../services/ticketService';
 import { getUsers } from '../services/userService';
+import { generateTicketSummary, generateReplySuggestion } from '../services/aiService';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -15,6 +16,15 @@ const TicketDetail = () => {
   const [newComment, setNewComment] = useState('');
   const [users, setUsers] = useState([]);
   const [assigneeId, setAssigneeId] = useState('');
+
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiSummaryResult, setAiSummaryResult] = useState(null);
+  const [aiSummaryError, setAiSummaryError] = useState(null);
+  
+  const [aiReplyLoading, setAiReplyLoading] = useState(false);
+  const [aiReplyResult, setAiReplyResult] = useState(null);
+  const [aiReplyError, setAiReplyError] = useState(null);
+  const [aiTone, setAiTone] = useState('professional');
 
   const loadData = async () => {
     try {
@@ -73,6 +83,43 @@ const TicketDetail = () => {
       alert("Assigned successfully");
     } catch (e) {
       alert("Failed to assign");
+    }
+  };
+
+  const handleSummarize = async () => {
+    try {
+      setAiSummaryLoading(true);
+      setAiSummaryResult(null);
+      setAiSummaryError(null);
+      const res = await generateTicketSummary(id);
+      if (res.success) setAiSummaryResult(res.data);
+      else setAiSummaryError(res.message || "AI Assistant belum dapat digunakan. Kuota API habis atau konfigurasi belum tersedia.");
+    } catch (e) {
+      setAiSummaryError("AI Assistant tidak tersedia atau terjadi kesalahan jaringan.");
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  const handleSuggestReply = async () => {
+    try {
+      setAiReplyLoading(true);
+      setAiReplyResult(null);
+      setAiReplyError(null);
+      const res = await generateReplySuggestion(id, aiTone);
+      if (res.success) setAiReplyResult(res.data);
+      else setAiReplyError(res.message || "AI Assistant belum dapat digunakan. Kuota API habis atau konfigurasi belum tersedia.");
+    } catch (e) {
+      setAiReplyError("AI Assistant tidak tersedia atau terjadi kesalahan jaringan.");
+    } finally {
+      setAiReplyLoading(false);
+    }
+  };
+
+  const applyReply = () => {
+    if (aiReplyResult?.reply) {
+      setNewComment(aiReplyResult.reply);
+      alert("Saran balasan diterapkan.");
     }
   };
 
@@ -149,6 +196,57 @@ const TicketDetail = () => {
         </div>
 
         <div className="lg:col-span-1 space-y-6 md:space-y-8">
+          <Card title="✨ AI Assistant" className="border-t-4 border-t-indigo-500 bg-indigo-50/30">
+            <div className="space-y-4">
+              <div>
+                <Button onClick={handleSummarize} disabled={aiSummaryLoading} className="w-full" variant="secondary">
+                  {aiSummaryLoading ? 'Meringkas...' : 'Ringkas Tiket'}
+                </Button>
+                {aiSummaryError && (
+                  <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 text-sm text-red-800">
+                    <span className="font-semibold mb-1 block">⚠️ Peringatan AI</span>
+                    {aiSummaryError}
+                  </div>
+                )}
+                {aiSummaryResult && (
+                  <div className="mt-3 p-3 bg-white rounded-lg border border-indigo-100 text-sm space-y-2">
+                    <p><strong>Ringkasan:</strong> {aiSummaryResult.summary}</p>
+                    <p><strong>Prediksi Akar Masalah:</strong> {aiSummaryResult.root_cause_prediction}</p>
+                    <p><strong>Rekomendasi Tindakan:</strong> {aiSummaryResult.recommended_next_action}</p>
+                    <p><strong>Tingkat Risiko:</strong> <Badge color="amber">{aiSummaryResult.risk_level}</Badge></p>
+                  </div>
+                )}
+              </div>
+              <div className="pt-4 border-t border-indigo-100">
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Tone Balasan</label>
+                <select 
+                  className="w-full mb-2 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm"
+                  value={aiTone}
+                  onChange={e => setAiTone(e.target.value)}
+                >
+                  <option value="professional">Profesional</option>
+                  <option value="friendly">Ramah</option>
+                  <option value="apologetic">Meminta Maaf</option>
+                </select>
+                <Button onClick={handleSuggestReply} disabled={aiReplyLoading} className="w-full" variant="secondary">
+                  {aiReplyLoading ? 'Membuat Saran...' : 'Rekomendasi Balasan'}
+                </Button>
+                {aiReplyError && (
+                  <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 text-sm text-red-800">
+                    <span className="font-semibold mb-1 block">⚠️ Peringatan AI</span>
+                    {aiReplyError}
+                  </div>
+                )}
+                {aiReplyResult && (
+                  <div className="mt-3 p-3 bg-white rounded-lg border border-indigo-100 text-sm">
+                    <p className="mb-2 text-slate-700 whitespace-pre-wrap">{aiReplyResult.reply}</p>
+                    <Button onClick={applyReply} size="sm" className="w-full">Gunakan Draft Ini</Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
           <Card title="Tindakan">
             <div className="space-y-6">
               <div>

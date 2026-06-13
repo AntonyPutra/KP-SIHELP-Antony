@@ -12,6 +12,8 @@ var sensitiveKeys = []string{
 	"signature", "x-signature", "secret", "client_secret",
 	"accountno", "accountnumber", "amount", "balance", "availablebalance",
 	"otp_session_token", "reset_password_token", "smtp_password",
+	"gemini_api_key", "ai_prompt", "ai_response", "prompt", "gemini_response",
+	"groq_api_key", "openrouter_api_key", "api_key",
 }
 
 func isSensitive(key string) bool {

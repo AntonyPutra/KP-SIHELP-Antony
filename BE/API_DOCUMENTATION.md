@@ -430,6 +430,71 @@ Sistem menerapkan kendali akses berbasis *Role-Based Access Control* (RBAC) deng
 
 ---
 
+### AI Assistant API
+
+Fitur AI Assistant SIHELP mendukung *multi-provider*. Berikut provider yang didukung:
+- Gemini
+- Ollama
+- Groq
+- OpenRouter
+
+**Contoh Konfigurasi Provider (via .env):**
+```env
+AI_PROVIDER=ollama
+AI_FEATURE_ENABLED=true
+AI_REQUEST_TIMEOUT_SECONDS=60
+
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.0-flash
+
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+OLLAMA_MODEL=llama3.2
+
+GROQ_API_KEY=
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+GROQ_MODEL=
+
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL=
+```
+
+#### POST `/api/ai/ticket-suggestion`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:**
+  ```json
+  {
+    "title": "Internet kantor tidak stabil",
+    "description": "Koneksi sering putus setiap 10 menit",
+    "category_hint": "",
+    "priority_hint": ""
+  }
+  ```
+
+#### POST `/api/ai/ticket-summary`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:**
+  ```json
+  {
+    "ticket_id": 1
+  }
+  ```
+
+#### POST `/api/ai/reply-suggestion`
+- **Auth Required:** Yes
+- **Role Access:** All Roles
+- **Request Body:**
+  ```json
+  {
+    "ticket_id": 1,
+    "tone": "professional"
+  }
+  ```
+
+---
+
 ## 8. Example Curl
 
 **Login:**

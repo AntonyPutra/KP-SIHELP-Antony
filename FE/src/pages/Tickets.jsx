@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTickets, createTicket } from '../services/ticketService';
 import { getCategories } from '../services/categoryService';
+import { generateTicketSuggestion } from '../services/aiService';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
@@ -18,6 +19,10 @@ const Tickets = () => {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ title: '', description: '', priority: 'Low', category_id: '' });
+  
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  const [aiError, setAiError] = useState(null);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -62,10 +67,51 @@ const Tickets = () => {
       await createTicket({ ...formData, category_id: Number(formData.category_id) });
       setShowForm(false);
       setFormData({ title: '', description: '', priority: 'Low', category_id: categories[0]?.id || '' });
+      setAiResult(null);
+      setAiError(null);
       loadTickets();
     } catch (e) {
       alert("Failed to create ticket");
     }
+  };
+
+  const handleAIAssist = async () => {
+    if (!formData.title && !formData.description) {
+      alert("Mohon isi judul atau deskripsi terlebih dahulu.");
+      return;
+    }
+    try {
+      setAiLoading(true);
+      setAiResult(null);
+      setAiError(null);
+      const res = await generateTicketSuggestion({
+        title: formData.title,
+        description: formData.description,
+        category_hint: "",
+        priority_hint: formData.priority
+      });
+      if (res.success) {
+        setAiResult(res.data);
+      } else {
+        setAiError(res.message || "AI Assistant belum dapat digunakan. Kuota Gemini API habis atau konfigurasi belum tersedia.");
+      }
+    } catch (e) {
+      console.error(e);
+      setAiError("AI Assistant tidak tersedia atau terjadi kesalahan jaringan.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAISuggestion = () => {
+    if (!aiResult) return;
+    setFormData({
+      ...formData,
+      title: aiResult.improved_title || formData.title,
+      description: aiResult.improved_description || formData.description,
+    });
+    // Optional: map priority and category if matching
+    alert("Saran AI telah diterapkan ke form.");
   };
 
   const getStatusColor = (status) => {
@@ -160,9 +206,47 @@ const Tickets = () => {
                 </select>
               </div>
             </div>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap gap-3 items-center">
               <Button type="submit" size="lg">Kirim Tiket Sekarang</Button>
+              <Button type="button" variant="secondary" size="lg" onClick={handleAIAssist} disabled={aiLoading}>
+                {aiLoading ? 'Memproses AI...' : '✨ Bantu AI'}
+              </Button>
             </div>
+            
+            {aiError && (
+              <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-800 text-sm">
+                <span className="font-semibold flex items-center mb-1">⚠️ Peringatan AI Assistant</span>
+                {aiError}
+              </div>
+            )}
+            
+            {aiResult && (
+              <div className="mt-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-indigo-900 flex items-center">
+                    <span className="mr-2">✨</span> Saran AI Assistant
+                  </h4>
+                  <Button type="button" size="sm" onClick={applyAISuggestion}>Gunakan Saran</Button>
+                </div>
+                <div className="space-y-3 text-sm text-indigo-800">
+                  <p><strong>Rekomendasi Judul:</strong> {aiResult.improved_title}</p>
+                  <p><strong>Rekomendasi Deskripsi:</strong> {aiResult.improved_description}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <p><strong>Saran Kategori:</strong> {aiResult.suggested_category}</p>
+                    <p><strong>Saran Prioritas:</strong> {aiResult.suggested_priority}</p>
+                  </div>
+                  <p><strong>Ringkasan:</strong> {aiResult.summary}</p>
+                  {aiResult.recommended_steps && aiResult.recommended_steps.length > 0 && (
+                    <div>
+                      <strong>Langkah Awal Penanganan:</strong>
+                      <ul className="list-disc pl-5 mt-1 space-y-1">
+                        {aiResult.recommended_steps.map((step, idx) => <li key={idx}>{step}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </form>
         </Card>
       )}

@@ -130,6 +130,12 @@ func main() {
 	reports.POST("/tickets", controllers.GetReportTickets)
 	reports.POST("/tickets/summary", controllers.GetReportSummary)
 
+	// AI Routes
+	aiGroup := protected.Group("/ai")
+	aiGroup.POST("/ticket-suggestion", controllers.AITicketSuggestion)
+	aiGroup.POST("/ticket-summary", controllers.AITicketSummary)
+	aiGroup.POST("/reply-suggestion", controllers.AIReplySuggestion)
+
 	// Start server
 	e.Logger.Fatal(e.Start(":8000"))
 }
