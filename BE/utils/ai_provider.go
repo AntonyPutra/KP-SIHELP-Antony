@@ -51,5 +51,16 @@ func ParseAIJSON(text string, target interface{}) error {
 	}
 	text = strings.TrimSpace(text)
 
-	return json.Unmarshal([]byte(text), target)
+	startIdx := strings.Index(text, "{")
+	endIdx := strings.LastIndex(text, "}")
+
+	if startIdx != -1 && endIdx != -1 && startIdx <= endIdx {
+		text = text[startIdx : endIdx+1]
+	}
+
+	err := json.Unmarshal([]byte(text), target)
+	if err != nil {
+		return json.Unmarshal([]byte(text), target) // return the actual err inside controller to override text later
+	}
+	return nil
 }

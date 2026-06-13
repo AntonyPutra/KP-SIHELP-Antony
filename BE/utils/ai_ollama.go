@@ -22,6 +22,7 @@ type OllamaMessage struct {
 type OllamaRequest struct {
 	Model    string          `json:"model"`
 	Messages []OllamaMessage `json:"messages"`
+	Format   string          `json:"format,omitempty"`
 	Stream   bool            `json:"stream"`
 }
 
@@ -40,7 +41,7 @@ func (p *OllamaProvider) GenerateContent(prompt string) (string, int, error) {
 	}
 
 	timeoutStr := os.Getenv("AI_REQUEST_TIMEOUT_SECONDS")
-	timeoutSec := 20
+	timeoutSec := 60
 	if timeoutStr != "" {
 		if val, err := strconv.Atoi(timeoutStr); err == nil {
 			timeoutSec = val
@@ -54,6 +55,7 @@ func (p *OllamaProvider) GenerateContent(prompt string) (string, int, error) {
 		Messages: []OllamaMessage{
 			{Role: "user", Content: prompt},
 		},
+		Format: "json",
 		Stream: false,
 	}
 

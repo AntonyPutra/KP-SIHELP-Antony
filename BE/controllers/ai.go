@@ -77,15 +77,15 @@ Deskripsi Asli: %s
 Kategori Hint: %s
 Prioritas Hint: %s
 
-Anda harus mengembalikan response dalam format JSON murni TANPA markdown block.
+Kamu wajib membalas hanya JSON valid. Jangan gunakan markdown. Jangan beri penjelasan. Jangan awali dengan kata Baik atau Berikut. Respons harus dimulai dengan karakter { dan diakhiri dengan karakter }. Gunakan key persis sesuai schema yang diminta. Jangan mengganti nama key.
 Format JSON yang diharapkan:
 {
-  "improved_title": "...",
-  "improved_description": "...",
-  "suggested_category": "Hardware / Software / Jaringan / Lainnya",
-  "suggested_priority": "Rendah / Sedang / Tinggi / Kritis",
-  "summary": "...",
-  "recommended_steps": ["..."]
+  "improved_title": "string",
+  "improved_description": "string",
+  "suggested_category": "string",
+  "suggested_priority": "Low|Medium|High|Critical",
+  "summary": "string",
+  "recommended_steps": ["string"]
 }`, req.Title, req.Description, req.CategoryHint, req.PriorityHint)
 
 	provider, err := utils.GetAIProvider()
@@ -98,10 +98,53 @@ Format JSON yang diharapkan:
 		return handleAIError(c, statusCode, err)
 	}
 
-	var aiData TicketSuggestionResponse
-	if err := utils.ParseAIJSON(content, &aiData); err != nil {
-		return utils.SendError(c, http.StatusInternalServerError, "Format respons AI tidak valid", err.Error())
+	var rawData map[string]interface{}
+	if err := utils.ParseAIJSON(content, &rawData); err != nil {
+		return utils.SendError(c, http.StatusInternalServerError, "Format respons AI tidak valid", nil)
 	}
+
+	if val, ok := rawData["recommended_category"]; ok && rawData["suggested_category"] == nil {
+		rawData["suggested_category"] = val
+	}
+	if val, ok := rawData["recommended_categories"]; ok && rawData["suggested_category"] == nil {
+		rawData["suggested_category"] = val
+	}
+	if val, ok := rawData["priority"]; ok && rawData["suggested_priority"] == nil {
+		rawData["suggested_priority"] = val
+	}
+	if sp, ok := rawData["suggested_priority"]; ok {
+		switch fmt.Sprintf("%v", sp) {
+		case "1": rawData["suggested_priority"] = "Low"
+		case "2": rawData["suggested_priority"] = "Medium"
+		case "3": rawData["suggested_priority"] = "High"
+		case "4": rawData["suggested_priority"] = "Critical"
+		}
+	}
+	if steps, ok := rawData["recommended_steps"].([]interface{}); ok {
+		var newSteps []string
+		for _, step := range steps {
+			switch v := step.(type) {
+			case string:
+				newSteps = append(newSteps, v)
+			case map[string]interface{}:
+				if text, ok := v["summary"].(string); ok {
+					newSteps = append(newSteps, text)
+				} else if text, ok := v["content"].(string); ok {
+					newSteps = append(newSteps, text)
+				} else if text, ok := v["text"].(string); ok {
+					newSteps = append(newSteps, text)
+				} else {
+					b, _ := json.Marshal(v)
+					newSteps = append(newSteps, string(b))
+				}
+			}
+		}
+		rawData["recommended_steps"] = newSteps
+	}
+
+	var aiData TicketSuggestionResponse
+	b, _ := json.Marshal(rawData)
+	json.Unmarshal(b, &aiData)
 
 	return utils.SendSuccess(c, http.StatusOK, "AI ticket suggestion generated", aiData)
 }
@@ -143,13 +186,13 @@ Berikut adalah data tiket beserta komentar riwayat penanganan:
 %s
 
 Buatlah ringkasan teknis.
-Kembalikan response dalam format JSON murni TANPA markdown block.
+Kamu wajib membalas hanya JSON valid. Jangan gunakan markdown. Jangan beri penjelasan. Jangan awali dengan kata Baik atau Berikut. Respons harus dimulai dengan karakter { dan diakhiri dengan karakter }. Gunakan key persis sesuai schema yang diminta. Jangan mengganti nama key.
 Format JSON yang diharapkan:
 {
-  "summary": "...",
-  "root_cause_prediction": "...",
-  "recommended_next_action": "...",
-  "risk_level": "Low / Medium / High"
+  "summary": "string",
+  "root_cause_prediction": "string",
+  "recommended_next_action": "string",
+  "risk_level": "Low|Medium|High"
 }`, string(jsonData))
 
 	provider, err := utils.GetAIProvider()
@@ -164,7 +207,7 @@ Format JSON yang diharapkan:
 
 	var aiData TicketSummaryResponse
 	if err := utils.ParseAIJSON(content, &aiData); err != nil {
-		return utils.SendError(c, http.StatusInternalServerError, "Format respons AI tidak valid", err.Error())
+		return utils.SendError(c, http.StatusInternalServerError, "Format respons AI tidak valid", nil)
 	}
 
 	return utils.SendSuccess(c, http.StatusOK, "AI ticket summary generated", aiData)
@@ -209,10 +252,10 @@ Data tiket:
 %s
 
 Buatkan rekomendasi balasan (reply) untuk tiket ini dengan nada (tone) %s.
-Kembalikan response dalam format JSON murni TANPA markdown block.
+Kamu wajib membalas hanya JSON valid. Jangan gunakan markdown. Jangan beri penjelasan. Jangan awali dengan kata Baik atau Berikut. Respons harus dimulai dengan karakter { dan diakhiri dengan karakter }. Gunakan key persis sesuai schema yang diminta. Jangan mengganti nama key.
 Format JSON yang diharapkan:
 {
-  "reply": "..."
+  "reply": "string"
 }`, string(jsonData), req.Tone)
 
 	provider, err := utils.GetAIProvider()
@@ -227,7 +270,7 @@ Format JSON yang diharapkan:
 
 	var aiData ReplySuggestionResponse
 	if err := utils.ParseAIJSON(content, &aiData); err != nil {
-		return utils.SendError(c, http.StatusInternalServerError, "Format respons AI tidak valid", err.Error())
+		return utils.SendError(c, http.StatusInternalServerError, "Format respons AI tidak valid", nil)
 	}
 
 	return utils.SendSuccess(c, http.StatusOK, "AI reply suggestion generated", aiData)
