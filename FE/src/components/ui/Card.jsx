@@ -1,14 +1,30 @@
 import React from 'react';
 
-const Card = ({ title, children, className = '', noPadding = false }) => {
+const Card = ({ title, subtitle, action, children, className = '', noPadding = false }) => {
   return (
-    <div className={`bg-white/90 backdrop-blur shadow-sm border border-slate-200/70 rounded-3xl transition-all duration-200 hover:shadow-md ${className}`}>
-      {title && (
-        <div className="px-6 sm:px-8 py-5 border-b border-slate-100/50">
-          <h2 className="text-lg font-bold text-slate-800">{title}</h2>
+    <div className={`glass-panel floating-glass ${className}`}>
+      {/* Card header */}
+      {(title || action) && (
+        <div
+          className="flex items-center justify-between px-6 py-5 relative z-10"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.45)' }}
+        >
+          <div>
+            {title && (
+              typeof title === 'string'
+                ? <h3 className="font-bold text-slate-800 text-base tracking-tight">{title}</h3>
+                : title
+            )}
+            {subtitle && (
+              <p className="text-xs text-slate-400 font-medium mt-0.5">{subtitle}</p>
+            )}
+          </div>
+          {action && <div className="shrink-0 ml-4">{action}</div>}
         </div>
       )}
-      <div className={noPadding ? '' : 'p-6 sm:p-8'}>
+
+      {/* Card body */}
+      <div className={`relative z-10 ${noPadding ? '' : 'p-6 sm:p-7'}`}>
         {children}
       </div>
     </div>

@@ -84,10 +84,11 @@ func CreateUser(c echo.Context) error {
 }
 
 type UpdateUserRequest struct {
-	ID     uint   `json:"id"`
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	RoleID uint   `json:"role_id"`
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	RoleID   uint   `json:"role_id"`
 }
 
 func UpdateUser(c echo.Context) error {
@@ -104,6 +105,14 @@ func UpdateUser(c echo.Context) error {
 	user.Name = req.Name
 	user.Email = req.Email
 	user.RoleID = req.RoleID
+
+	if req.Password != "" {
+		hash, err := utils.HashPassword(req.Password)
+		if err != nil {
+			return utils.SendError(c, http.StatusInternalServerError, "Failed to hash password", nil)
+		}
+		user.Password = hash
+	}
 
 	if err := config.DB.Save(&user).Error; err != nil {
 		return utils.SendError(c, http.StatusInternalServerError, "Failed to update user", err.Error())

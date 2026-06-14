@@ -4,6 +4,8 @@ import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
+import DatePicker from '../components/ui/DatePicker';
+import Select from '../components/ui/Select';
 import Button from '../components/ui/Button';
 import PageHeader from '../components/ui/PageHeader';
 import EmptyState from '../components/ui/EmptyState';
@@ -59,24 +61,28 @@ const Reports = () => {
       />
 
       <Card className="border-t-4 border-t-emerald-500">
-        <form onSubmit={handleFilter} className="flex flex-col md:flex-row gap-4 items-end mb-6 bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-          <Input label="Tanggal Mulai" type="date" value={filters.start_date} onChange={e => setFilters({...filters, start_date: e.target.value})} className="mb-0 flex-1" />
-          <Input label="Tanggal Akhir" type="date" value={filters.end_date} onChange={e => setFilters({...filters, end_date: e.target.value})} className="mb-0 flex-1" />
+        <form onSubmit={handleFilter} className="flex flex-col md:flex-row gap-4 items-end mb-6 bg-white/40 backdrop-blur-md p-5 rounded-2xl border border-white/60 shadow-sm relative z-10">
+          <div className="flex-1 w-full md:w-auto">
+            <DatePicker label="Tanggal Mulai" value={filters.start_date} onChange={e => setFilters({...filters, start_date: e.target.value})} />
+          </div>
+          <div className="flex-1 w-full md:w-auto">
+            <DatePicker label="Tanggal Akhir" value={filters.end_date} onChange={e => setFilters({...filters, end_date: e.target.value})} />
+          </div>
           <div className="w-full md:w-auto flex-1">
             <label className="block text-slate-700 text-sm font-semibold mb-1.5">Status Tiket</label>
             <div className="relative">
-              <FilterIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <select 
-                className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-8 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none"
+              <Select 
+                options={[
+                  { value: '', label: 'Semua Status' },
+                  { value: 'Open', label: 'Open' },
+                  { value: 'Diproses', label: 'Diproses' },
+                  { value: 'Selesai', label: 'Selesai' },
+                  { value: 'Ditolak', label: 'Ditolak' }
+                ]}
                 value={filters.status}
                 onChange={e => setFilters({...filters, status: e.target.value})}
-              >
-                <option value="">Semua Status</option>
-                <option value="Open">Open</option>
-                <option value="Diproses">Diproses</option>
-                <option value="Selesai">Selesai</option>
-                <option value="Ditolak">Ditolak</option>
-              </select>
+                icon={FilterIcon}
+              />
             </div>
           </div>
           <div className="w-full md:w-auto">

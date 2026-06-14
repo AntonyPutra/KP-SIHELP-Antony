@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
 import { setToken } from '../utils/auth';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
 import BrandLogo from '../components/ui/BrandLogo';
-import { CheckCircle } from 'lucide-react';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -19,128 +16,224 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await login(email, password);
-      if (res.success && res.data.token) {
-        setToken(res.data.token);
+      const response = await login(email, password);
+      if (response.success && response.data.token) {
+        setToken(response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
         navigate('/');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Email atau password salah. Silakan coba kembali.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50 relative overflow-hidden font-sans">
-      
-      {/* Left Column - Branding (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-col w-1/2 bg-slate-950 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-slate-900 z-0"></div>
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl z-0"></div>
-        <div className="absolute top-1/4 -right-32 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl z-0"></div>
-        
-        <div className="relative z-10 flex flex-col justify-between h-full p-16">
-          <div className="flex items-center space-x-3">
-            <BrandLogo size="lg" />
-            <div className="flex flex-col">
-              <span className="text-white font-bold text-2xl leading-none tracking-tight">AntonyPutra</span>
-              <span className="text-blue-400 text-xs uppercase tracking-widest font-bold mt-1">Workspace</span>
+    <div className="min-h-screen flex relative overflow-hidden font-sans">
+
+      {/* ── Decorative orbs ── */}
+      {/* Cyan orb — top left */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '-18%', left: '-12%',
+          width: '60%', height: '60%',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(6,182,212,0.38) 0%, rgba(6,182,212,0.05) 65%)',
+          filter: 'blur(90px)',
+          opacity: 0.85,
+        }}
+      />
+      {/* Blue orb — bottom right */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '-18%', right: '-12%',
+          width: '60%', height: '60%',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(37,99,235,0.32) 0%, rgba(37,99,235,0.03) 65%)',
+          filter: 'blur(90px)',
+          opacity: 0.80,
+        }}
+      />
+      {/* White translucent orb — center-right */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '25%', left: '38%',
+          width: '46%', height: '46%',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.60) 0%, transparent 68%)',
+          filter: 'blur(80px)',
+          opacity: 0.70,
+        }}
+      />
+
+      {/* ── Hero / Brand panel — LEFT (desktop) ── */}
+      <div className="hidden lg:flex lg:w-[45%] relative z-10 flex-col justify-between p-14 xl:p-18">
+        <div>
+          {/* Brand */}
+          <div className="flex items-center mb-14">
+            <BrandLogo size="md" className="mr-3" />
+            <div>
+              <span className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none block">SIHELP</span>
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-0.5 block">by AntonyPutra</span>
             </div>
           </div>
 
-          <div className="my-auto max-w-lg">
-            <h1 className="text-4xl xl:text-5xl font-bold leading-tight mb-6">
-              Sistem Informasi Helpdesk & Ticketing Layanan
-            </h1>
-            <p className="text-slate-400 text-lg mb-12">
-              Kelola dan pantau tiket layanan secara terpusat dengan antarmuka yang modern, cepat, dan terstruktur.
-            </p>
+          {/* Headline */}
+          <h1 className="text-4xl xl:text-5xl font-black text-slate-900 tracking-tight leading-[1.15] mb-5">
+            Helpdesk &amp;<br/>
+            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #2563EB, #06B6D4)' }}>
+              Ticketing System
+            </span>
+          </h1>
+          <p className="text-base text-slate-500 max-w-sm font-medium leading-relaxed">
+            Kelola tiket layanan, pengguna, dan laporan secara terpusat. Cepat, terstruktur, dan cerdas dengan dukungan AI.
+          </p>
 
-            <div className="space-y-4">
-              <div className="flex items-center text-slate-300">
-                <CheckCircle className="w-5 h-5 text-blue-400 mr-3 shrink-0" />
-                <span>Pelacakan tiket secara real-time</span>
+          {/* Floating glass feature chips */}
+          <div className="mt-10 flex flex-wrap gap-3">
+            {[
+              { label: 'Multi-Provider AI', delay: '0s' },
+              { label: 'Real-time Tracking', delay: '0.8s' },
+              { label: 'Audit Log', delay: '1.6s' },
+              { label: 'Role-based Access', delay: '2.4s' },
+            ].map(f => (
+              <div
+                key={f.label}
+                className="glass-panel animate-float"
+                style={{
+                  animationDelay: f.delay,
+                  borderRadius: '14px',
+                  padding: '8px 16px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: '#1D4ED8',
+                  overflow: 'visible',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ color: '#06B6D4' }}>✓</span> {f.label}
               </div>
-              <div className="flex items-center text-slate-300">
-                <CheckCircle className="w-5 h-5 text-blue-400 mr-3 shrink-0" />
-                <span>Manajemen pengguna dan hak akses</span>
-              </div>
-              <div className="flex items-center text-slate-300">
-                <CheckCircle className="w-5 h-5 text-blue-400 mr-3 shrink-0" />
-                <span>Laporan dan metrik komprehensif</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-sm text-slate-500">
-            &copy; 2026 Antony Putra. All rights reserved.
+            ))}
           </div>
         </div>
+
+        <p className="text-xs text-slate-400 font-medium">
+          &copy; {new Date().getFullYear()} SIHELP &mdash; Internal Helpdesk Platform
+        </p>
       </div>
 
-      {/* Right Column - Login Form */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 lg:p-16 relative">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo Header */}
-          <div className="lg:hidden flex flex-col items-center mb-10">
-            <BrandLogo size="lg" className="mb-4 shadow-md" />
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">SIHELP by AntonyPutra</h1>
+      {/* ── Login Form — RIGHT ── */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 lg:p-16 relative z-10">
+        <div className="w-full max-w-[420px]">
+
+          {/* Mobile brand */}
+          <div className="flex flex-col items-center mb-8 lg:hidden">
+            <BrandLogo size="lg" className="mb-3" />
+            <span className="text-xl font-bold text-slate-900">SIHELP</span>
+            <span className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-0.5">Helpdesk &amp; Ticketing System</span>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200/70 p-8 sm:p-10 relative overflow-hidden backdrop-blur">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Masuk ke Akun</h2>
-              <p className="text-sm text-slate-500 mt-2 font-medium">Silakan login untuk mengakses dashboard.</p>
+          {/* ─── Frosted Glass Card ─── */}
+          <div className="glass-panel-strong p-8 sm:p-10 animate-slide-up">
+            <div className="mb-7 relative z-10">
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Masuk ke Akun Anda</h2>
+              <p className="text-sm text-slate-500 mt-2 font-medium leading-relaxed">
+                Gunakan kredensial yang diberikan oleh administrator sistem.
+              </p>
             </div>
-            
+
+            {/* Error alert */}
             {error && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl mb-6 text-sm font-medium flex items-center">
-                <span className="mr-2">⚠️</span> {error}
+              <div className="relative z-10 flex items-start gap-2.5 mb-5 px-4 py-3 rounded-2xl text-sm font-medium text-red-700"
+                style={{ background: 'rgba(254,226,226,0.75)', border: '1px solid rgba(252,165,165,0.50)', backdropFilter: 'blur(8px)' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                {error}
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-5" autoComplete="off">
-              <Input 
-                label="Alamat Email" 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
-                placeholder="Masukkan email Anda"
-                autoComplete="off"
-              />
-              <Input 
-                label="Password" 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
-                placeholder="Masukkan password Anda"
-                autoComplete="new-password"
-              />
-              
-              <div className="pt-4">
-                <Button type="submit" size="lg" className="w-full text-base font-semibold shadow-sm hover:shadow-md transition-all duration-200" disabled={loading}>
-                  {loading ? 'Memproses...' : 'Masuk Sekarang'}
-                </Button>
+            <form onSubmit={handleLogin} className="space-y-5 relative z-10" autoComplete="off">
+              {/* Email */}
+              <div>
+                <label className="block text-slate-700 text-sm font-semibold mb-2">Alamat Email</label>
+                <input
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  placeholder="email@perusahaan.com"
+                  className="glass-input w-full rounded-2xl px-4 py-3.5 text-sm text-slate-800"
+                  style={{ fontFamily: 'inherit' }}
+                />
               </div>
-              
-              <div className="text-center mt-4">
+
+              {/* Password */}
+              <div>
+                <label className="block text-slate-700 text-sm font-semibold mb-2">Password</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  className="glass-input w-full rounded-2xl px-4 py-3.5 text-sm text-slate-800"
+                  style={{ fontFamily: 'inherit' }}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="pt-3 space-y-3">
+                {/* Submit */}
                 <button
-                  type="button"
-                  onClick={() => navigate('/login-otp')}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                  id="login-submit"
+                  type="submit"
+                  disabled={loading}
+                  className="glass-btn-primary w-full py-3.5 px-4 text-sm"
                 >
-                  Atau Login dengan OTP Email
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2.5">
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                      </svg>
+                      Masuk...
+                    </span>
+                  ) : 'Masuk Sekarang'}
+                </button>
+
+                {/* Divider */}
+                <div className="flex items-center py-1">
+                  <div className="flex-grow h-px" style={{ background: 'rgba(148,163,184,0.35)' }} />
+                  <span className="flex-shrink-0 mx-4 text-[11px] text-slate-400 font-bold uppercase tracking-widest">atau</span>
+                  <div className="flex-grow h-px" style={{ background: 'rgba(148,163,184,0.35)' }} />
+                </div>
+
+                {/* OTP button */}
+                <button
+                  id="login-otp"
+                  type="button"
+                  onClick={() => navigate('/login/otp')}
+                  className="glass-btn-secondary w-full py-3.5 px-4 text-sm text-blue-700"
+                  style={{ color: '#1D4ED8' }}
+                >
+                  Login dengan OTP Email
                 </button>
               </div>
             </form>
           </div>
-          
-          <div className="lg:hidden text-center mt-8 text-sm text-slate-500">
-            &copy; 2026 Antony Putra
-          </div>
+
+          {/* Footer note */}
+          <p className="text-center mt-6 text-xs font-medium" style={{ color: 'rgba(100,116,139,0.80)' }}>
+            Belum punya akun? Hubungi administrator untuk pendaftaran.
+          </p>
         </div>
       </div>
     </div>

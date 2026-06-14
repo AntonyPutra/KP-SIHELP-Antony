@@ -71,18 +71,28 @@ func RequestOTP(c echo.Context) error {
 	}
 
 	// Send Email
+	var mockOTP string
 	err = utils.SendOTPEmail(user.Email, otpStr, req.Purpose)
 	if err != nil {
-		config.DB.Model(&newOTP).Update("status", "failed")
-		return utils.SendError(c, http.StatusInternalServerError, "Failed to send email", nil)
+		if err.Error() == "SMTP configuration is missing" {
+			mockOTP = otpStr
+		} else {
+			config.DB.Model(&newOTP).Update("status", "failed")
+			return utils.SendError(c, http.StatusInternalServerError, "Failed to send email", nil)
+		}
 	}
 
 	// Audit Log
 	logAudit(user.ID, "REQUEST_OTP", "email_otps", newOTP.ID)
 
-	return utils.SendSuccess(c, http.StatusOK, "OTP sent successfully", map[string]interface{}{
+	responseData := map[string]interface{}{
 		"otp_session_token": otpSessionToken,
-	})
+	}
+	if mockOTP != "" {
+		responseData["mock_otp"] = mockOTP
+	}
+
+	return utils.SendSuccess(c, http.StatusOK, "OTP sent successfully", responseData)
 }
 
 type VerifyOTPPayload struct {
@@ -255,17 +265,27 @@ func ResendOTP(c echo.Context) error {
 	}
 
 	// Send Email
+	var mockOTP string
 	err = utils.SendOTPEmail(newOTP.Email, otpStr, req.Purpose)
 	if err != nil {
-		config.DB.Model(&newOTP).Update("status", "failed")
-		return utils.SendError(c, http.StatusInternalServerError, "Failed to send email", nil)
+		if err.Error() == "SMTP configuration is missing" {
+			mockOTP = otpStr
+		} else {
+			config.DB.Model(&newOTP).Update("status", "failed")
+			return utils.SendError(c, http.StatusInternalServerError, "Failed to send email", nil)
+		}
 	}
 
 	logAudit(newOTP.UserID, "RESEND_OTP", "email_otps", newOTP.ID)
 
-	return utils.SendSuccess(c, http.StatusOK, "OTP resent successfully", map[string]interface{}{
+	responseData := map[string]interface{}{
 		"otp_session_token": otpSessionToken,
-	})
+	}
+	if mockOTP != "" {
+		responseData["mock_otp"] = mockOTP
+	}
+
+	return utils.SendSuccess(c, http.StatusOK, "OTP resent successfully", responseData)
 }
 
 func logAudit(userID uint, activity string, tableName string, recordID uint) {
