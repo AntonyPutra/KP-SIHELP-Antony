@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [categoryData, setCategoryData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
   const [recentTickets, setRecentTickets] = useState([]);
+  const [role, setRole] = useState(3);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -50,18 +51,31 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
-        const sum = await getDashboardSummary();
-        setSummary(sum.data);
+        const uStr = localStorage.getItem('user');
+        let userRole = 3;
+        if (uStr) {
+          try {
+            const u = JSON.parse(uStr);
+            userRole = u.role || 3;
+          } catch(e) {}
+        }
+        setRole(userRole);
 
-        const stat = await getTicketsByStatus();
-        setStatusData(stat.data || []);
+        if (userRole === 1 || userRole === 4) {
+          const sum = await getDashboardSummary();
+          setSummary(sum.data);
 
-        const cat = await getTicketsByCategory();
-        setCategoryData(cat.data || []);
+          const stat = await getTicketsByStatus();
+          setStatusData(stat.data || []);
 
-        const mon = await getTicketsMonthly();
-        setMonthlyData(mon.data || []);
+          const cat = await getTicketsByCategory();
+          setCategoryData(cat.data || []);
+
+          const mon = await getTicketsMonthly();
+          setMonthlyData(mon.data || []);
+        } else {
+          setSummary({ total_tickets: 0, total_open_tickets: 0, total_done_tickets: 0, total_users: 0 });
+        }
 
         const ticketsRes = await getTickets();
         setRecentTickets(ticketsRes.data ? ticketsRes.data.slice(0, 5) : []);
@@ -173,17 +187,20 @@ const Dashboard = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <div className="animate-slide-up delay-100"><StatCard title="Total Tickets" value={summary.total_tickets} subtitle="Seluruh tiket masuk" icon={Ticket} colorClass="blue" /></div>
-        <div className="animate-slide-up delay-200"><StatCard title="Open Tickets" value={summary.total_open_tickets} subtitle="Menunggu diproses" icon={AlertTriangle} colorClass="amber" /></div>
-        <div className="animate-slide-up delay-300"><StatCard title="Done Tickets" value={summary.total_done_tickets} subtitle="Tiket telah selesai" icon={CheckCircle} colorClass="emerald" /></div>
-        <div className="animate-slide-up delay-[400ms]"><StatCard title="Total Users" value={summary.total_users} subtitle="Pengguna terdaftar" icon={Users} colorClass="cyan" /></div>
-      </div>
+      {(role === 1 || role === 4) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          <div className="animate-slide-up delay-100"><StatCard title="Total Tickets" value={summary.total_tickets} subtitle="Seluruh tiket masuk" icon={Ticket} colorClass="blue" /></div>
+          <div className="animate-slide-up delay-200"><StatCard title="Open Tickets" value={summary.total_open_tickets} subtitle="Menunggu diproses" icon={AlertTriangle} colorClass="amber" /></div>
+          <div className="animate-slide-up delay-300"><StatCard title="Done Tickets" value={summary.total_done_tickets} subtitle="Tiket telah selesai" icon={CheckCircle} colorClass="emerald" /></div>
+          <div className="animate-slide-up delay-[400ms]"><StatCard title="Total Users" value={summary.total_users} subtitle="Pengguna terdaftar" icon={Users} colorClass="cyan" /></div>
+        </div>
+      )}
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         
         {/* Monthly Trend - 2/3 */}
+        {(role === 1 || role === 4) && (
         <div className="lg:col-span-2 flex flex-col animate-slide-up delay-[200ms]">
           <ChartCard title="Tren Tiket Bulanan" subtitle="Statistik jumlah tiket masuk per bulan" className="h-full hover:shadow-lg transition-shadow duration-300">
             {monthlyData.length > 0 ? (
@@ -193,8 +210,10 @@ const Dashboard = () => {
             )}
           </ChartCard>
         </div>
+        )}
 
         {/* Status Chart - 1/3 */}
+        {(role === 1 || role === 4) && (
         <div className="lg:col-span-1 flex flex-col animate-slide-up delay-[300ms]">
           <ChartCard title="Status Tiket" subtitle="Proporsi status tiket saat ini" className="h-full hover:shadow-lg transition-shadow duration-300">
             {statusData.length > 0 ? (
@@ -204,8 +223,10 @@ const Dashboard = () => {
             )}
           </ChartCard>
         </div>
+        )}
 
         {/* Category Chart - 1/2 or 2/3 */}
+        {(role === 1 || role === 4) && (
         <div className="lg:col-span-1 flex flex-col animate-slide-up delay-[400ms]">
           <ChartCard title="Kategori Masalah" subtitle="Distribusi tiket berdasarkan kategori" className="h-full hover:shadow-lg transition-shadow duration-300">
             {categoryData.length > 0 ? (
@@ -215,9 +236,10 @@ const Dashboard = () => {
             )}
           </ChartCard>
         </div>
+        )}
 
         {/* Recent Tickets - 1/2 or 2/3 */}
-        <div className="lg:col-span-2 flex flex-col animate-slide-up delay-[500ms]">
+        <div className={`${(role === 1 || role === 4) ? 'lg:col-span-2' : 'lg:col-span-3'} flex flex-col animate-slide-up delay-[500ms]`}>
           <div className="glass-panel flex flex-col h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <div className="px-6 py-5 border-b border-white/40 flex justify-between items-center">
               <h3 className="text-base font-bold text-slate-800">Tiket Terbaru</h3>
