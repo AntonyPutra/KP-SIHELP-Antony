@@ -24,7 +24,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/login-otp" element={<OTPLogin />} />
+      <Route path="/login/otp" element={<OTPLogin />} />
       
       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
@@ -35,6 +35,9 @@ const AppRoutes = () => {
         <Route path="reports" element={<Reports />} />
         <Route path="audit-logs" element={<AuditLogs />} />
       </Route>
+
+      {/* Catch-all route to prevent blank screens on invalid URLs */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
