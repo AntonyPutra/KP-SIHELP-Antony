@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { getToken } from '../utils/auth';
+import { getToken, getRoleId } from '../utils/auth';
 import MainLayout from '../components/layout/MainLayout';
 import Login from '../pages/Login';
 import OTPLogin from '../pages/OTPLogin';
@@ -20,6 +20,21 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const RoleProtectedRoute = ({ children, allowedRoles }) => {
+  const uStr = localStorage.getItem('user');
+  let role = 3; // Default to User
+  if (uStr) {
+    try {
+      role = getRoleId(JSON.parse(uStr));
+    } catch(e) {}
+  }
+  
+  if (!allowedRoles.includes(role)) {
+    return <Navigate to="/tickets" replace />;
+  }
+  return children;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -27,13 +42,13 @@ const AppRoutes = () => {
       <Route path="/login/otp" element={<OTPLogin />} />
       
       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-        <Route index element={<Dashboard />} />
-        <Route path="users" element={<Users />} />
+        <Route index element={<RoleProtectedRoute allowedRoles={[1, 4]}><Dashboard /></RoleProtectedRoute>} />
+        <Route path="users" element={<RoleProtectedRoute allowedRoles={[1]}><Users /></RoleProtectedRoute>} />
         <Route path="categories" element={<Categories />} />
         <Route path="tickets" element={<Tickets />} />
         <Route path="tickets/:id" element={<TicketDetail />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="audit-logs" element={<AuditLogs />} />
+        <Route path="reports" element={<RoleProtectedRoute allowedRoles={[1, 4]}><Reports /></RoleProtectedRoute>} />
+        <Route path="audit-logs" element={<RoleProtectedRoute allowedRoles={[1, 4]}><AuditLogs /></RoleProtectedRoute>} />
       </Route>
 
       {/* Catch-all route to prevent blank screens on invalid URLs */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { requestOTP, verifyOTP, resendOTP } from '../services/authService';
-import { setToken } from '../utils/auth';
+import { setToken, getRoleId } from '../utils/auth';
 import BrandLogo from '../components/ui/BrandLogo';
 
 const OTPLogin = () => {
@@ -44,8 +44,8 @@ const OTPLogin = () => {
         setToken(res.data.token);
         const userData = res.data.user || {};
         localStorage.setItem('user', JSON.stringify(userData));
-        
-        if (userData.role === 1 || userData.role === 4) {
+        const roleId = getRoleId(userData);
+        if (roleId === 1 || roleId === 4) {
           navigate('/');
         } else {
           navigate('/tickets');

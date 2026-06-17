@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
-import { setToken } from '../utils/auth';
+import { setToken, getRoleId } from '../utils/auth';
 import BrandLogo from '../components/ui/BrandLogo';
 
 const Login = () => {
@@ -21,11 +21,12 @@ const Login = () => {
         setToken(response.data.token);
         const userData = response.data.user || {};
         localStorage.setItem('user', JSON.stringify(userData));
+        const roleId = getRoleId(userData);
         
         // Redirect based on role
         // 1: Admin, 4: Pimpinan -> / (Dashboard)
         // 2: Petugas, 3: User -> /tickets
-        if (userData.role === 1 || userData.role === 4) {
+        if (roleId === 1 || roleId === 4) {
           navigate('/');
         } else {
           navigate('/tickets');

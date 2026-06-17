@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Folders, Ticket, FileBarChart, History } from 'lucide-react';
 import BrandLogo from '../ui/BrandLogo';
+import { getRoleId } from '../../utils/auth';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const [role, setRole] = React.useState(3);
@@ -10,7 +11,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       const uStr = localStorage.getItem('user');
       if (uStr) {
         const u = JSON.parse(uStr);
-        setRole(u.role || 3);
+        setRole(getRoleId(u));
       }
     } catch (e) {}
   }, []);
@@ -24,9 +25,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Audit Logs',  path: '/audit-logs', icon: History },
   ];
 
-  // Hide Dashboard for Petugas (2) and User (3)
+  // Hide restricted menus for Petugas (2) and User (3)
   if (role !== 1 && role !== 4) {
-    menuItems = menuItems.filter(item => item.name !== 'Dashboard');
+    menuItems = menuItems.filter(item => 
+      !['Dashboard', 'Users', 'Reports', 'Audit Logs'].includes(item.name)
+    );
   }
 
   return (
