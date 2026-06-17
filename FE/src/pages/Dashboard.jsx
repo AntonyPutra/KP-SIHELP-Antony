@@ -61,6 +61,11 @@ const Dashboard = () => {
         }
         setRole(userRole);
 
+        if (userRole !== 1 && userRole !== 4) {
+          navigate('/tickets', { replace: true });
+          return;
+        }
+
         if (userRole === 1 || userRole === 4) {
           const sum = await getDashboardSummary();
           setSummary(sum.data);

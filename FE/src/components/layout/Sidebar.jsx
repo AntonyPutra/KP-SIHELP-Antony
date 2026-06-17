@@ -4,7 +4,18 @@ import { LayoutDashboard, Users, Folders, Ticket, FileBarChart, History } from '
 import BrandLogo from '../ui/BrandLogo';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-  const menuItems = [
+  const [role, setRole] = React.useState(3);
+  React.useEffect(() => {
+    try {
+      const uStr = localStorage.getItem('user');
+      if (uStr) {
+        const u = JSON.parse(uStr);
+        setRole(u.role || 3);
+      }
+    } catch (e) {}
+  }, []);
+
+  let menuItems = [
     { name: 'Dashboard',   path: '/',           icon: LayoutDashboard },
     { name: 'Users',       path: '/users',      icon: Users },
     { name: 'Categories',  path: '/categories', icon: Folders },
@@ -12,6 +23,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Reports',     path: '/reports',    icon: FileBarChart },
     { name: 'Audit Logs',  path: '/audit-logs', icon: History },
   ];
+
+  // Hide Dashboard for Petugas (2) and User (3)
+  if (role !== 1 && role !== 4) {
+    menuItems = menuItems.filter(item => item.name !== 'Dashboard');
+  }
 
   return (
     <aside

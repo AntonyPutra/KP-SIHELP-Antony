@@ -42,8 +42,14 @@ const OTPLogin = () => {
       const res = await verifyOTP(otpSessionToken, otp, 'login');
       if (res.success && res.data.token) {
         setToken(res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user || {}));
-        navigate('/');
+        const userData = res.data.user || {};
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        if (userData.role === 1 || userData.role === 4) {
+          navigate('/');
+        } else {
+          navigate('/tickets');
+        }
       }
     } catch (err) { setError(err.response?.data?.message || 'Kode OTP tidak valid atau sudah kadaluarsa.'); }
     finally { setLoading(false); }

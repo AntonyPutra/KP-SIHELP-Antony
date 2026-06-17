@@ -19,8 +19,17 @@ const Login = () => {
       const response = await login(email, password);
       if (response.success && response.data.token) {
         setToken(response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
-        navigate('/');
+        const userData = response.data.user || {};
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Redirect based on role
+        // 1: Admin, 4: Pimpinan -> / (Dashboard)
+        // 2: Petugas, 3: User -> /tickets
+        if (userData.role === 1 || userData.role === 4) {
+          navigate('/');
+        } else {
+          navigate('/tickets');
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Email atau password salah. Silakan coba kembali.');
