@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getTicket, getComments, createComment, updateTicketStatus, assignTicket } from '../services/ticketService';
 import { getUsers } from '../services/userService';
 import { generateTicketSummary, generateReplySuggestion } from '../services/aiService';
+import { getRoleId } from '../utils/auth';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -19,6 +20,7 @@ const TicketDetail = () => {
   const [newComment, setNewComment] = useState('');
   const [users, setUsers] = useState([]);
   const [assigneeId, setAssigneeId] = useState('');
+  const [role, setRole] = useState(3);
 
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [aiSummaryResult, setAiSummaryResult] = useState(null);
@@ -53,6 +55,12 @@ const TicketDetail = () => {
   };
 
   useEffect(() => {
+    try {
+      const uStr = localStorage.getItem('user');
+      if (uStr) {
+        setRole(getRoleId(JSON.parse(uStr)));
+      }
+    } catch(e) {}
     loadData();
     loadUsers();
   }, [id]);
@@ -355,6 +363,7 @@ const TicketDetail = () => {
                 </div>
               </div>
 
+              {role === 1 && (
               <div className="pt-6 border-t border-white/50">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Penugasan Petugas</label>
                 <div className="flex flex-col gap-3">
@@ -367,6 +376,7 @@ const TicketDetail = () => {
                   <Button onClick={handleAssign} className="w-full" disabled={!assigneeId}>Tugaskan Sekarang</Button>
                 </div>
               </div>
+              )}
             </div>
           </Card>
         </div>
