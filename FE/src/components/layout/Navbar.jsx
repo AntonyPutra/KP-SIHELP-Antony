@@ -72,19 +72,8 @@ const Navbar = ({ toggleSidebar }) => {
         </div>
       </div>
 
-      {/* Center: search bar */}
-      <div className="flex-1 max-w-md mx-8 hidden md:block">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari tiket, pengguna, atau data..."
-            readOnly
-            className="glass-input w-full rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-600"
-            style={{ fontFamily: 'inherit', cursor: 'default' }}
-          />
-        </div>
-      </div>
+      {/* Center: Search bar removed as requested */}
+      <div className="flex-1 max-w-md mx-8 hidden md:block"></div>
 
       {/* Right: profile dropdown */}
       <div className="relative" ref={dropdownRef}>
