@@ -185,92 +185,94 @@ const Navbar = ({ toggleSidebar }) => {
 
       {/* Change Password Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-slide-up">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800">Ganti Kata Sandi</h3>
-              <button
-                onClick={() => {
-                  setShowProfileModal(false);
-                  setPasswordError('');
-                  setPasswordSuccess('');
-                  setOldPassword('');
-                  setNewPassword('');
-                  setConfirmPassword('');
-                }}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col max-h-[90vh] my-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+                <h3 className="text-lg font-bold text-slate-800">Ganti Kata Sandi</h3>
+                <button
+                  onClick={() => {
+                    setShowProfileModal(false);
+                    setPasswordError('');
+                    setPasswordSuccess('');
+                    setOldPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-            <div className="p-6">
-              {passwordError && (
-                <div id="change-password-error" className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-red-100">
-                  <Shield className="w-4 h-4 shrink-0" />
-                  {passwordError}
-                </div>
-              )}
-              {passwordSuccess && (
-                <div id="change-password-success" className="mb-4 p-3 bg-green-50 text-green-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-green-100">
-                  <Shield className="w-4 h-4 shrink-0" />
-                  {passwordSuccess}
-                </div>
-              )}
+              <div className="p-6 overflow-y-auto">
+                {passwordError && (
+                  <div id="change-password-error" className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-red-100">
+                    <Shield className="w-4 h-4 shrink-0" />
+                    {passwordError}
+                  </div>
+                )}
+                {passwordSuccess && (
+                  <div id="change-password-success" className="mb-4 p-3 bg-green-50 text-green-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-green-100">
+                    <Shield className="w-4 h-4 shrink-0" />
+                    {passwordSuccess}
+                  </div>
+                )}
 
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password Lama</label>
-                  <input
-                    type="password"
-                    id="old-password"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password Baru</label>
-                  <input
-                    type="password"
-                    id="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Konfirmasi Password Baru</label>
-                  <input
-                    type="password"
-                    id="confirm-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
-                    required
-                  />
-                </div>
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password Lama</label>
+                    <input
+                      type="password"
+                      id="old-password"
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password Baru</label>
+                    <input
+                      type="password"
+                      id="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Konfirmasi Password Baru</label>
+                    <input
+                      type="password"
+                      id="confirm-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
+                      required
+                    />
+                  </div>
 
-                <div className="pt-2 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowProfileModal(false)}
-                    className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    id="submit-change-password"
-                    disabled={isSubmitting}
-                    className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-                  </button>
-                </div>
-              </form>
+                  <div className="pt-2 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowProfileModal(false)}
+                      className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      id="submit-change-password"
+                      disabled={isSubmitting}
+                      className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
