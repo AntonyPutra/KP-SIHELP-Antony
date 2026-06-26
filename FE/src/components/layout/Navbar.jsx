@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Menu, LogOut, User, Search, ChevronDown, Shield, Key, X } from 'lucide-react';
 import { logout, changePassword } from '../../services/authService';
@@ -184,13 +185,13 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       {/* Change Password Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div
+      {showProfileModal && createPortal(
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="flex min-h-full items-center justify-center py-6">
+            <section
               role="dialog"
               aria-modal="true"
-              className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-white shadow-xl animate-slide-up"
+              className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-white shadow-2xl animate-slide-up"
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                 <h3 className="text-lg font-bold text-slate-800">Ganti Kata Sandi</h3>
@@ -277,9 +278,10 @@ const Navbar = ({ toggleSidebar }) => {
                   </div>
                 </form>
               </div>
-            </div>
+            </section>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );
