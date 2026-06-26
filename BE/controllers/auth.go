@@ -98,3 +98,46 @@ func Logout(c echo.Context) error {
 
 	return utils.SendSuccess(c, http.StatusOK, "Logout successful", map[string]interface{}{})
 }
+
+type ChangePasswordRequest struct {
+	OldPassword     string `json:"old_password"`
+	NewPassword     string `json:"new_password"`
+	ConfirmPassword string `json:"confirm_password"`
+}
+
+func ChangePassword(c echo.Context) error {
+	var req ChangePasswordRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.SendError(c, http.StatusBadRequest, "Invalid request payload", nil)
+	}
+
+	if req.NewPassword != req.ConfirmPassword {
+		return utils.SendError(c, http.StatusBadRequest, "Konfirmasi password tidak cocok", nil)
+	}
+
+	if len(req.NewPassword) < 8 {
+		return utils.SendError(c, http.StatusBadRequest, "Password baru minimal 8 karakter", nil)
+	}
+
+	userID := c.Get("user_id").(uint)
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		return utils.SendError(c, http.StatusNotFound, "User not found", nil)
+	}
+
+	if !utils.CheckPasswordHash(req.OldPassword, user.Password) {
+		return utils.SendError(c, http.StatusBadRequest, "Kata sandi lama tidak sesuai.", nil)
+	}
+
+	hash, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return utils.SendError(c, http.StatusInternalServerError, "Failed to hash new password", nil)
+	}
+
+	user.Password = hash
+	if err := config.DB.Save(&user).Error; err != nil {
+		return utils.SendError(c, http.StatusInternalServerError, "Failed to update password", nil)
+	}
+
+	return utils.SendSuccess(c, http.StatusOK, "Password berhasil diubah", nil)
+}

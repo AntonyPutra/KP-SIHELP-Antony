@@ -11,7 +11,16 @@ export const logout = async () => {
 };
 
 export const getProfile = async () => {
-  const response = await api.post('/auth/profile', {});
+  const response = await api.post('/auth/profile');
+  return response.data;
+};
+
+export const changePassword = async (oldPassword, newPassword, confirmPassword) => {
+  const response = await api.post('/auth/change-password', {
+    old_password: oldPassword,
+    new_password: newPassword,
+    confirm_password: confirmPassword
+  });
   return response.data;
 };
 

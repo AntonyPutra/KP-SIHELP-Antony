@@ -79,6 +79,7 @@ func main() {
 
 	// Profile
 	protected.POST("/auth/profile", controllers.Profile)
+	protected.POST("/auth/change-password", controllers.ChangePassword)
 
 	// User Management Routes (Admin Only)
 	users := protected.Group("/users")
