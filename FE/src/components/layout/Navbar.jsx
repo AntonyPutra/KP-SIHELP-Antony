@@ -187,8 +187,12 @@ const Navbar = ({ toggleSidebar }) => {
       {showProfileModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-sm animate-fade-in">
           <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col max-h-[90vh] my-auto">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-white shadow-xl animate-slide-up"
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                 <h3 className="text-lg font-bold text-slate-800">Ganti Kata Sandi</h3>
                 <button
                   onClick={() => {
@@ -205,7 +209,7 @@ const Navbar = ({ toggleSidebar }) => {
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto">
+              <div className="p-6">
                 {passwordError && (
                   <div id="change-password-error" className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-red-100">
                     <Shield className="w-4 h-4 shrink-0" />
